@@ -28,14 +28,12 @@ def d_update(F, t):
         result = t.z0
     return result
 
-def update_diameters(sid, edges, d_pres, d_vegf, d_s):
-    d_new = sid.c_pres * d_pres + sid.c_vegf * d_vegf + sid.c_s * d_s - sid.decrease
+def update_diameters(sid, edges, cb_now):
+    #d_new = sid.c_pres * d_pres + sid.c_vegf * d_vegf + sid.c_s * d_s - sid.decrease
     for i,e in enumerate(edges):
         n1, n2, d, l, t = e
-        if sid.linear:
-            d += d_new[i] * d
-        else:
-            d += d_new[i]
+        keff = sid.k / (1 + sid.k * d / sid.D / sid.alpha)
+        d += keff / sid.gamma * sid.dt * (cb_now[n1] + cb_now[n2]) / 2
         if d < sid.dmin:
             d = sid.dmin
         if d > sid.dmax:

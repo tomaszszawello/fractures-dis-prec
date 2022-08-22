@@ -210,17 +210,8 @@ def set_geometry(n, G=[], geo='rect', R=25, R_s=5, *args, **kwargs):
         if (node not in reg_nodes) and (node not in in_nodes) and (node not in out_nodes):
             other_nodes.append(node)
                 
-    in_nodes_ox = in_nodes
-    out_nodes_ox = out_nodes
-    oxresult = np.zeros(n * n)
-    #for node in top_nodes + in_nodes_ox + out_nodes_ox:
-    #    oxresult[node] = 1
-    for node in in_nodes_ox:
-        oxresult[node] = 1
-    for node in out_nodes_ox:
-        oxresult[node] = 2
 
-    return G, in_nodes, out_nodes, reg_nodes, boundary_nodes_out, boundary_nodes_in, in_nodes_ox, out_nodes_ox, oxresult
+    return G, in_nodes, out_nodes, reg_nodes, boundary_nodes_out, boundary_nodes_in
 
 
 

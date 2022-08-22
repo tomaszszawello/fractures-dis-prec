@@ -3,9 +3,9 @@ import dill
 from config import simInputData
 from utils import fParams
                                                                             
-def save(name, sid:simInputData, G, edges, oxresult, in_nodes, out_nodes, in_nodes_ox, out_nodes_ox, boundary_edges):
+def save(name, sid:simInputData, G, edges, in_nodes, out_nodes, boundary_edges):
     pos = nx.get_node_attributes(G,'pos')
-    All = [sid, edges, in_nodes, out_nodes, in_nodes_ox, out_nodes_ox, oxresult, boundary_edges, pos]
+    All = [sid, edges, in_nodes, out_nodes, boundary_edges, pos]
 
     with open(sid.dirname+name, 'wb') as file:
         dill.dump(All, file)
@@ -39,7 +39,7 @@ def load(name):
         return G1
     
     G1 = reproduct()
-    return  sid, G1, edges, oxresult, in_nodes, out_nodes, in_nodes_ox, out_nodes_ox, boundary_edges
+    return  sid, G1, edges, in_nodes, out_nodes, boundary_edges
 
 
 def save_config(sid:simInputData):

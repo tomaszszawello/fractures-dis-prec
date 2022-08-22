@@ -3,7 +3,7 @@ import networkx as nx
 import numpy as np
 from matplotlib import gridspec
 
-import pressure as Pr
+import pressure_pin as Pr
 import vegf as Ve
 
 from utils import mu_d, d_update
@@ -13,11 +13,11 @@ from config import simInputData
 
 # normalizacja rysowania (maksymalna grubość krawędzi)
 
-def draw(sid:simInputData, G, in_nodes, out_nodes, boundary_edges, oxresult, name, data='q'):
+def draw(sid:simInputData, G, in_nodes, out_nodes, boundary_edges, name, data='q'):
     """
     rysowanie krwi, data to q albo d
     """
-    plt.figure(figsize=(40, 40), dpi = 200)
+    plt.figure(figsize=(sid.figsize, sid.figsize), dpi = 200)
     plt.axis('off')
     pos = nx.get_node_attributes(G, 'pos')
 
@@ -31,13 +31,11 @@ def draw(sid:simInputData, G, in_nodes, out_nodes, boundary_edges, oxresult, nam
             if (x, y) not in boundary_edges and (y, x) not in boundary_edges:
                 edges.append((x, y))
                 qs.append(q)
-                if oxresult[x] == 1 and oxresult[y] == 1:
-                    colors.append('r')
-                else:
-                    colors.append('k')
 
-
-    nx.draw_networkx_edges(G, pos, edgelist=edges, width=sid.qdrawconst * np.array(qs) / qmax, edge_color = colors)
+    if data == 'q':
+        nx.draw_networkx_edges(G, pos, edgelist=edges, width=sid.qdrawconst * np.array(qs) / qmax)
+    elif data == 'd':
+        nx.draw_networkx_edges(G, pos, edgelist=edges, width=sid.ddrawconst * np.array(qs))
     #nx.draw_networkx_nodes(G, pos, node_size = 30, node_color = oxdraw, cmap='Blues')
     
     
@@ -109,7 +107,7 @@ def drawblood(sid:simInputData, G, in_nodes, out_nodes, boundary_edges, name, ox
     plt.close()
 
 
-def drawhist(sid:simInputData, G, in_nodes, out_nodes, boundary_edges, oxresult, pnow, vnow, snow_upstream, snow_downstream, name):
+def drawhist(sid:simInputData, G, in_nodes, out_nodes, boundary_edges, pnow, cb_now, name):
     d_hist = [[], [], [], [], [], [], [], []]
     q_hist = [[], [], [], [], [], [], [], []]
     shear_hist = [[], [], [], [], [], [], [], []]
@@ -278,75 +276,32 @@ def drawhist(sid:simInputData, G, in_nodes, out_nodes, boundary_edges, oxresult,
     plt.close()
 
 
-def uniform_hist(sid:simInputData, G, in_nodes, out_nodes, boundary_edges, oxresult, pnow, oxnow, vnow, snow_upstream, snow_downstream, name):
+def uniform_hist(sid:simInputData, G, in_nodes, out_nodes, boundary_edges, pnow, cb_now, name):
     d_hist = []
     q_hist = []
-    shear_hist = []
-    vegf_hist = []
-    upstream_hist = []
-    downstream_hist = []
-    d_shear_hist = []
-    d_vegf_hist = []
-    ox_hist = []
-
-
-    for n1, n2 in G.edges():
-        q = G[n1][n2]['q']
-        d = G[n1][n2]['d']
-        l = G[n1][n2]['length']
-
-        shear = sid.c2 * mu_d(d) * q / d ** 3
-        d_shear = d_update(shear, sid.F_p)
-
-        if (oxresult[n1] == 1 or oxresult[n2] == 1):    
-            vegf = np.abs(vnow[n1] - vnow[n2])
-        else:
-            vegf = 0
-
-        d_vegf = d_update(vegf, sid.F_ox)
-        
-
-        if oxresult[n1] == 1 and oxresult[n2] == 1:
-            if pnow[n1] > pnow[n2]:
-                upstream = snow_upstream[n1]
-                downstream = snow_downstream[n2]
-            else:
-                upstream = snow_upstream[n2]
-                downstream = snow_downstream[n1]
-        else:
-            upstream = 0
-            downstream = 0
-
-        if oxresult[n1] == 1:
-            ox_hist.append(oxnow[n1])
-        if oxresult[n2] == 1:
-            ox_hist.append(oxnow[n2])
-
-        d_upstream = d_update(upstream, sid.F_s)
-        d_downstream = d_update(downstream, sid.F_s)
-
-
-        q_hist.append(q)
-        d_hist.append(d)
-        shear_hist.append(shear)
-        vegf_hist.append(vegf)
-        upstream_hist.append(d_upstream)
-        downstream_hist.append(d_downstream)
-        d_shear_hist.append(d_shear)
-        d_vegf_hist.append(d_vegf)
+    growth_hist = []
 
     edges = []
     qs = []
     colors = []
+
     for n1, n2 in G.edges():
         q = G[n1][n2]['q']
         d = G[n1][n2]['d']
         l = G[n1][n2]['length']
+
+        keff = sid.k / (1 + sid.k * d / sid.D / sid.alpha)
+        growth = keff / sid.gamma * sid.dt * (cb_now[n1] + cb_now[n2]) / 2
+
+        q_hist.append(q)
+        d_hist.append(d)
+        growth_hist.append(growth)
+
         if (n1, n2) not in boundary_edges and (n2, n1) not in boundary_edges:
             edges.append((n1, n2))
-            qs.append(q)
-            F = d * np.abs(pnow[n1] - pnow[n2]) / 2 / l
-            colors.append(d_update(F, sid.F_p))
+            qs.append(d)
+            colors.append(growth)
+
 
     pos = nx.get_node_attributes(G, 'pos')
 
@@ -363,61 +318,35 @@ def uniform_hist(sid:simInputData, G, in_nodes, out_nodes, boundary_edges, oxres
     q_max = max([edge[2] for edge in G.edges(data='q')])
  
     plt.figure(figsize=(sid.figsize * 1.25, sid.figsize))
-    spec = gridspec.GridSpec(ncols=5, nrows=3, height_ratios=[5, 1, 1])
+    spec = gridspec.GridSpec(ncols=4, nrows=2, height_ratios=[5, 1])
     
-    plt.subplot(spec.new_subplotspec((0, 0), colspan=5))
+    plt.subplot(spec.new_subplotspec((0, 0), colspan=4))
     plt.scatter(x_in, y_in, s=60, facecolors='white', edgecolors='black')
     plt.scatter(x_out, y_out, s=60, facecolors='black', edgecolors='white')
-    nx.draw_networkx_edges(G, pos, edgelist=edges, edge_color = colors, width=sid.qdrawconst * np.array(qs) / q_max, edge_cmap = plt.cm.plasma)
+    nx.draw_networkx_edges(G, pos, edgelist=edges, edge_color = colors, width=sid.ddrawconst * np.array(qs), edge_cmap = plt.cm.plasma)
     #nx.draw_networkx_nodes(G, pos, node_size = 25 * oxdraw, node_color = oxdraw, cmap='Reds')   
     plt.axis('equal')
     
-    plt.subplot(spec[5]).set_title('Diameter')
+    plt.subplot(spec[4]).set_title('Diameter')
     plt.hist(d_hist, bins=50)
-    plt.axvline(sid.dth, color='k', linestyle='dashed', linewidth=1)
     plt.yscale("log")
 
-    plt.subplot(spec[6]).set_title('Flow')
+    plt.subplot(spec[5]).set_title('Flow')
     plt.hist(q_hist, bins=50)
     plt.yscale("log")
 
-    plt.subplot(spec[7]).set_title('Shear')
-    plt.hist(shear_hist, bins=50)
+    plt.subplot(spec[6]).set_title('Growth')
+    plt.hist(growth_hist, bins=50)
     plt.yscale("log")
 
-    plt.subplot(spec[8]).set_title('VEGF')
-    plt.hist(vegf_hist, bins=50)
+    plt.subplot(spec[7]).set_title('cb')
+    plt.hist(cb_now, bins=50)
     plt.yscale("log")
-
-    plt.subplot(spec[9]).set_title('Oxygen')
-    plt.hist(oxnow, bins=50)
-    plt.yscale("log")
-
-    plt.subplot(spec[10]).set_title('Upstream growth')
-    plt.hist(upstream_hist, bins=50)
-    plt.yscale("log")
-
-    plt.subplot(spec[11]).set_title('Signal')
-    plt.hist(snow_upstream, bins=50)
-    plt.yscale("log")
-
-    plt.subplot(spec[12]).set_title('Shear growth')
-    plt.hist(d_shear_hist, bins=50)
-    plt.yscale("log")
-
-    plt.subplot(spec[13]).set_title('VEGF growth')
-    plt.hist(d_vegf_hist, bins=50)
-    plt.yscale("log")
-
-    plt.subplot(spec[14]).set_title('Oxygen')
-    plt.hist(ox_hist, bins=50)
-    plt.yscale("log")    
-
     
     plt.savefig(sid.dirname + "/" + name)
     plt.close()
 
-def drawvessels(sid:simInputData, G, in_nodes, out_nodes, boundary_edges, name, oxresult, oxdraw, data='q', pruned = False):
+def drawvessels(sid:simInputData, G, in_nodes, out_nodes, boundary_edges, name, data='q', pruned = False):
     """
     rysowanie krwi, data to q albo d
     """
