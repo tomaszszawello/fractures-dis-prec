@@ -291,7 +291,7 @@ def uniform_hist(sid:simInputData, G, in_nodes, out_nodes, boundary_edges, pnow,
         l = G[n1][n2]['length']
 
         keff = sid.k / (1 + sid.k * d / sid.D / sid.alpha)
-        growth = keff / sid.gamma * sid.dt * (cb_now[n1] + cb_now[n2]) / 2
+        growth = sid.dt * q * max(cb_now[n1], cb_now[n2]) / (np.pi * l * sid.gamma * d) * (1 - np.exp(-np.pi * d * keff * l / q))
 
         q_hist.append(q)
         d_hist.append(d)

@@ -26,13 +26,16 @@ def update_matrix(sid:simInputData, pnow, edges):
             elif pnow[n2] > pnow[n1]:
                 q = (pnow[n2] - pnow[n1]) * d ** 4 * np.pi / (128 * sid.mu * l)
                 keff = sid.k / (1 + sid.k * d / sid.D / sid.alpha)
-                qc = q * np.exp(-np.pi * d * keff * l / q)
+                if q != 0:
+                    qc = q * np.exp(-np.pi * d * keff * l / q)
+                else:
+                    qc = 0
                 data.append(qc)
                 row.append(n1)
                 col.append(n2)
                 diag[n1] -= q
         elif t == 1:
-            q = (pnow[n2] - pnow[n1]) * d ** 4 * np.pi / (128 * sid.mu * l)
+            q = np.abs(pnow[n2] - pnow[n1]) * d ** 4 * np.pi / (128 * sid.mu * l)
             keff = sid.k / (1 + sid.k * d / sid.D / sid.alpha)
             qc = q * np.exp(-np.pi * d * keff * l / q)
             data.append(qc)
@@ -41,7 +44,7 @@ def update_matrix(sid:simInputData, pnow, edges):
             diag[n1] -= q
             diag[n2] = 1
         elif t == 2:
-            q = (pnow[n1] - pnow[n2]) * d ** 4 * np.pi / (128 * sid.mu * l)
+            q = np.abs(pnow[n1] - pnow[n2]) * d ** 4 * np.pi / (128 * sid.mu * l)
             keff = sid.k / (1 + sid.k * d / sid.D / sid.alpha)
             qc = q * np.exp(-np.pi * d * keff * l / q)
             data.append(qc)

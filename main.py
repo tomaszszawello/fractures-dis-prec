@@ -1,6 +1,6 @@
 import dissolution as Di
 import draw_net as Dr
-import pressure_qin as Pr
+import pressure as Pr
 import save as Sv
 
 from build import build
@@ -14,7 +14,7 @@ import numpy as np
 sid = simInputData()
 sid, G, edges, in_nodes, out_nodes, boundary_edges = build(sid) #boundary edges?
 
-presult = Pr.create_vector(sid, in_nodes, out_nodes)
+presult = Pr.create_vector(sid, in_nodes, out_nodes, edges)
 cb_result = Di.create_vector(sid, in_nodes)
 
 
@@ -38,7 +38,7 @@ for i in range(sid.old_iters, iters):
 
 
     #d_pres = Pr.update_graph(sid, edges, pnow)
-    edges = update_diameters(sid, edges, cb_now)
+    edges = update_diameters(sid, edges, pnow, cb_now)
 
     if sid.data_collection and i % sid.collect_data_every == 0:
         collect_data(sid, edges, in_nodes, out_nodes, pnow)

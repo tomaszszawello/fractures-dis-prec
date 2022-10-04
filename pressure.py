@@ -7,10 +7,14 @@ from utils import d_update
 from config import simInputData
 
 
-def create_vector(sid:simInputData, in_nodes, out_nodes):
+def create_vector(sid:simInputData, in_nodes, out_nodes, edges):
+    in_edges = 0
+    for n1, n2, d, l, t in edges:
+        if t == 1:
+            in_edges += 1
     presult = np.zeros(sid.nsq)
     for node in in_nodes:
-        presult[node] = -sid.qin
+        presult[node] = -sid.qin * in_edges
     for node in out_nodes:
         presult[node] = sid.pout
     return presult
@@ -72,7 +76,6 @@ def update_matrix(sid:simInputData, edges, in_nodes, out_nodes):
 def update_network(G1, sid:simInputData, edges, pnow):
     Q_in = 0
     Q_out = 0
-    in_edges = 0
 
     for n1, n2, d, l, t in edges:
         G1[n1][n2]['d']= d
@@ -81,14 +84,9 @@ def update_network(G1, sid:simInputData, edges, pnow):
         
         if t == 1:    
             Q_in += q
-            in_edges += 1
         if t == 2:
             Q_out += q
     
     print('Q_in =', Q_in, 'Q_out =', Q_out)
 
-    G = sid.k * sid.noise[1] / sid.D / sid.alpha
-    q_in = Q_in / in_edges
-    Da = np.pi * sid.noise[1] * sid.k * sid.l / q_in / (1 + G)
-    print ('G = ', G, ', Da = ', Da)
     return G1

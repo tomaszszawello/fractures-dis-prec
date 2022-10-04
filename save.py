@@ -19,11 +19,8 @@ def load(name):
     edges = All[1]
     in_nodes = All[2]
     out_nodes = All[3]
-    in_nodes_ox = All[4]
-    out_nodes_ox = All[5]
-    oxresult = All[6]
-    boundary_edges = All[7]
-    pos = All[8]
+    boundary_edges = All[4]
+    pos = All[5]
 
     def reproduct():
         G1 = nx.Graph()

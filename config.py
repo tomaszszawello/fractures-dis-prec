@@ -2,11 +2,11 @@ import numpy as np
 from utils import fParams
 
 class simInputData:
-    n = 51 # rozmiar siatki
+    n = 201 # rozmiar siatki
     iters = 901  # liczba iteracji
-    plot_every = 30
-    save_every = 600
-    collect_data_every =  600
+    plot_every = 50
+    save_every = 1000
+    collect_data_every =  1000
 
     figsize = 10
 
@@ -18,8 +18,8 @@ class simInputData:
 
     data_collection = False
 
-    qin = 2 # jednostki? przepływ na wejściu
-    pin = 1 # jednostki? ciśnienie na wejściu
+    qin = 0.03 # jednostki? przepływ na wejściu
+    #pin = 1 # jednostki? ciśnienie na wejściu
     pout = 0  # jednostki? ciśnienie na wyjściu
     mu = 1e-3 #kg/(m s) współczynnik lepkości dynamicznej
     l = 1  # początkowa długosć krawędzi
@@ -32,7 +32,7 @@ class simInputData:
     D = 3e-3 # mm^2/s stała dyfuzji HCl
     k = 1 # mm/s stała reakcji CaC03 + HCl
     gamma = 60 # mol/dm^3
-    dt = 10 # s krok czasowy
+    dt = 100 # s krok czasowy
 
 
 
@@ -44,7 +44,7 @@ class simInputData:
     ddrawconst = 1
 
     load = 0 # 0- dane z config, 1- wczytanie danych z ewoluowanej sieci (plik save), 2- wczytanie templatki (plik template)
-    load_name = 'own201/15'
+    load_name = 'rect101/1'
 
 
     #geo = "cylindrical"
@@ -65,4 +65,6 @@ class simInputData:
     
     nsq = n ** 2
     old_iters = 0
-    dirname = geo + str(n)
+    G = k * noise[1] / D / alpha
+    Da = np.pi * noise[1] * k * l / qin / (1 + G)
+    dirname = geo + str(n) + '/' + f'G{G:.2f}Da{Da:.2f}'
