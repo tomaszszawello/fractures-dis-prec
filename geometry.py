@@ -211,7 +211,7 @@ def set_geometry(n, G=[], geo='rect', R=25, R_s=5, *args, **kwargs):
             other_nodes.append(node)
                 
 
-    return G, in_nodes, out_nodes, reg_nodes, boundary_nodes_out, boundary_nodes_in
+    return G, in_nodes, out_nodes, boundary_nodes_out, boundary_nodes_in
 
 
 
@@ -262,7 +262,7 @@ def equidistant_geometry(G, n, R, xrange, yrange, how_many):
 
     return in_nodes, out_nodes
 
-def create_edgelist(G, in_nodes, out_nodes, reg_nodes, boundary_nodes_out, boundary_nodes_in):
+def create_edgelist(G, in_nodes, out_nodes, boundary_nodes_out = [], boundary_nodes_in = []):
     edges = []
 
     for n1, n2 in G.edges():
@@ -290,19 +290,19 @@ def create_edgelist(G, in_nodes, out_nodes, reg_nodes, boundary_nodes_out, bound
         #     edges.append((n2, n1, d, l, 2))
 
 
-    removetab = []
-    for index, (n1, n2, d, l, t) in enumerate(edges):
-        if n1 in boundary_nodes_in and n2 in boundary_nodes_out:
-            removetab.append(index)
-        elif n2 in boundary_nodes_in and n1 in boundary_nodes_out:
-            removetab.append(index)
+    # removetab = []
+    # for index, (n1, n2, d, l, t) in enumerate(edges):
+    #     if n1 in boundary_nodes_in and n2 in boundary_nodes_out:
+    #         removetab.append(index)
+    #     elif n2 in boundary_nodes_in and n1 in boundary_nodes_out:
+    #         removetab.append(index)
 
-    edgesnew = []
+    # edgesnew = []
     
-    for index, (n1, n2, d, l, t) in enumerate(edges):
-        if index not in removetab:
-            edgesnew.append((n1, n2, d, l, t))
+    # for index, (n1, n2, d, l, t) in enumerate(edges):
+    #     if index not in removetab:
+    #         edgesnew.append((n1, n2, d, l, t))
         
-    edges = edgesnew
+    # edges = edgesnew
 
     return edges

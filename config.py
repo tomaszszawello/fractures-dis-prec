@@ -2,50 +2,61 @@ import numpy as np
 from utils import fParams
 
 class simInputData:
-    n = 201 # rozmiar siatki
-    iters = 901  # liczba iteracji
-    plot_every = 50
-    save_every = 1000
-    collect_data_every =  1000
+    n = 200 # rozmiar siatki
+    iters = 10  # liczba iteracji
+    tmax = 1000
+    plot_every = 1000
+    save_every = 10000
+    collect_data_every = 100
 
     figsize = 10
 
+    Da_eff = 1
+    G = 1
+
+    Da = Da_eff * (1 + G)
+
+    d0 = 0.100861
     #noise = ["uniform", 1, 0.9] #jednorodny rozkład srednic, srednica początkowa, diameter_wiggle_param
-    noise = ["gaussian", 0.1, 0.02] #gaussowski rozkład srednic, mu, sigma
+    noise = ["gaussian", 1, 0] #gaussowski rozkład srednic, mu, sigma
     #noise = ["lognormal", 1, 0.3] #log-normalny rozkład srednic, mu, sigma
 
-    shear_d = False
+    data_collection = True
 
-    data_collection = False
-
-    qin = 0.03 # jednostki? przepływ na wejściu
+    qin = 1 # jednostki? przepływ na wejściu
     #pin = 1 # jednostki? ciśnienie na wejściu
     pout = 0  # jednostki? ciśnienie na wyjściu
-    mu = 1e-3 #kg/(m s) współczynnik lepkości dynamicznej
+    #mu = 1e-3 #kg/(m s) współczynnik lepkości dynamicznej
     l = 1  # początkowa długosć krawędzi
-    c1 = np.pi / 128  # stała przepływu
+    #c1 = np.pi / 128  # stała przepływu
 
 
-    cb_in = 4 # mol / dm^3
+    cb_in = 1 # mol / dm^3
 
-    alpha = 4 # liczba Sherwooda
-    D = 3e-3 # mm^2/s stała dyfuzji HCl
-    k = 1 # mm/s stała reakcji CaC03 + HCl
-    gamma = 60 # mol/dm^3
-    dt = 100 # s krok czasowy
+    #alpha = 4 # liczba Sherwooda
+    #D = 3e-3 # mm^2/s stała dyfuzji HCl
+    #k = 1 # mm/s stała reakcji CaC03 + HCl
+    #gamma = 60 # mol/dm^3
 
 
+    adaptive_dt = False
+    dt = 0.01
+    growth_rate = 0.05 # maksymalny procent średnicy o jaki może urosnąć krawędź
+    dtmax = 5
+
+    breakthrough = True
+    dbreak = 4
 
     dmin = 0.01
-    dmax = 20
+    dmax = 30000
 
 
     qdrawconst = 15
-    ddrawconst = 1
+    ddrawconst = 0.5
 
-    load = 0 # 0- dane z config, 1- wczytanie danych z ewoluowanej sieci (plik save), 2- wczytanie templatki (plik template)
-    load_name = 'rect101/1'
-
+    load = 3 # 0- dane z config, 1- wczytanie danych z ewoluowanej sieci (plik save), 2- wczytanie templatki (plik template)
+    load_name = 'rect50/G1.00Daeff1.00vtk/3'
+    vtk_name = 'network_200x200.vtk'
 
     #geo = "cylindrical"
     #geo = "donut"
@@ -65,6 +76,7 @@ class simInputData:
     
     nsq = n ** 2
     old_iters = 0
-    G = k * noise[1] / D / alpha
-    Da = np.pi * noise[1] * k * l / qin / (1 + G)
-    dirname = geo + str(n) + '/' + f'G{G:.2f}Da{Da:.2f}'
+    old_t = 0
+    #G = k * noise[1] / D / alpha
+    #Da = np.pi * noise[1] * k * l / qin / (1 + G)
+    dirname = geo + str(n) + '/' + f'G{G:.2f}Daeff{Da_eff:.2f}'

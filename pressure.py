@@ -14,7 +14,8 @@ def create_vector(sid:simInputData, in_nodes, out_nodes, edges):
             in_edges += 1
     presult = np.zeros(sid.nsq)
     for node in in_nodes:
-        presult[node] = -sid.qin * in_edges
+        #presult[node] = -sid.qin * in_edges
+        presult[node] = -sid.qin * 2 * len(in_nodes)
     for node in out_nodes:
         presult[node] = sid.pout
     return presult
@@ -25,7 +26,7 @@ def update_matrix(sid:simInputData, edges, in_nodes, out_nodes):
     insert = defaultdict(float)
     diag = np.zeros(sid.nsq)
     for n1, n2, d, l, t in edges:
-        res = sid.c1 / sid.mu * d ** 4 / l
+        res = d ** 4 / l
         if t == 0:
             data.append(res)
             row.append(n1)
@@ -79,14 +80,14 @@ def update_network(G1, sid:simInputData, edges, pnow):
 
     for n1, n2, d, l, t in edges:
         G1[n1][n2]['d']= d
-        q = sid.c1 / sid.mu * d ** 4 * np.abs(pnow[n1] - pnow[n2]) / l
+        q = d ** 4 * np.abs(pnow[n1] - pnow[n2]) / l
         G1[n1][n2]['q'] = q
         
         if t == 1:    
             Q_in += q
         if t == 2:
             Q_out += q
-    
+
     print('Q_in =', Q_in, 'Q_out =', Q_out)
 
     return G1

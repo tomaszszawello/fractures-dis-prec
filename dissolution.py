@@ -16,37 +16,30 @@ def update_matrix(sid:simInputData, pnow, edges):
     for n1, n2, d, l, t in edges:
         if t == 0:
             if pnow[n1] > pnow[n2]:
-                q = (pnow[n1] - pnow[n2]) * d ** 4 * np.pi / (128 * sid.mu * l)
-                keff = sid.k / (1 + sid.k * d / sid.D / sid.alpha)
-                qc = q * np.exp(-np.pi * d * keff * l / q)
+                q = (pnow[n1] - pnow[n2]) * d ** 4 / l
+                qc = q * np.exp(-sid.Da / (1 + sid.G * d) * d * l / q)
                 data.append(qc)
                 row.append(n2)
                 col.append(n1)
                 diag[n2] -= q
             elif pnow[n2] > pnow[n1]:
-                q = (pnow[n2] - pnow[n1]) * d ** 4 * np.pi / (128 * sid.mu * l)
-                keff = sid.k / (1 + sid.k * d / sid.D / sid.alpha)
-                if q != 0:
-                    qc = q * np.exp(-np.pi * d * keff * l / q)
-                else:
-                    qc = 0
+                q = (pnow[n2] - pnow[n1]) * d ** 4 / l
+                qc = q * np.exp(-sid.Da / (1 + sid.G * d) * d * l / q)
                 data.append(qc)
                 row.append(n1)
                 col.append(n2)
                 diag[n1] -= q
         elif t == 1:
-            q = np.abs(pnow[n2] - pnow[n1]) * d ** 4 * np.pi / (128 * sid.mu * l)
-            keff = sid.k / (1 + sid.k * d / sid.D / sid.alpha)
-            qc = q * np.exp(-np.pi * d * keff * l / q)
+            q = np.abs(pnow[n2] - pnow[n1]) * d ** 4 / l
+            qc = q * np.exp(-sid.Da / (1 + sid.G * d) * d * l / q)
             data.append(qc)
             row.append(n1)
             col.append(n2)
             diag[n1] -= q
             diag[n2] = 1
         elif t == 2:
-            q = np.abs(pnow[n1] - pnow[n2]) * d ** 4 * np.pi / (128 * sid.mu * l)
-            keff = sid.k / (1 + sid.k * d / sid.D / sid.alpha)
-            qc = q * np.exp(-np.pi * d * keff * l / q)
+            q = np.abs(pnow[n1] - pnow[n2]) * d ** 4 / l
+            qc = q * np.exp(-sid.Da / (1 + sid.G * d) * d * l / q)
             data.append(qc)
             row.append(n2)
             col.append(n1)

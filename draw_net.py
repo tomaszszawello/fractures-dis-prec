@@ -128,7 +128,7 @@ def drawhist(sid:simInputData, G, in_nodes, out_nodes, boundary_edges, pnow, cb_
     for n1, n2 in G.edges():
         q = G[n1][n2]['q']
         d = G[n1][n2]['d']
-        l = G[n1][n2]['length']
+        l = G[n1][n2]['l']
 
         shear = sid.c2 * mu_d(d) * q / d ** 3
 
@@ -288,10 +288,9 @@ def uniform_hist(sid:simInputData, G, in_nodes, out_nodes, boundary_edges, pnow,
     for n1, n2 in G.edges():
         q = G[n1][n2]['q']
         d = G[n1][n2]['d']
-        l = G[n1][n2]['length']
+        l = 1#G[n1][n2]['l']
 
-        keff = sid.k / (1 + sid.k * d / sid.D / sid.alpha)
-        growth = sid.dt * q * max(cb_now[n1], cb_now[n2]) / (np.pi * l * sid.gamma * d) * (1 - np.exp(-np.pi * d * keff * l / q))
+        growth = q * max(cb_now[n1], cb_now[n2]) / (sid.Da * l * d) * (1 - np.exp(-sid.Da / (1 + sid.G * d) * d * l / q))
 
         q_hist.append(q)
         d_hist.append(d)
@@ -300,7 +299,7 @@ def uniform_hist(sid:simInputData, G, in_nodes, out_nodes, boundary_edges, pnow,
         if (n1, n2) not in boundary_edges and (n2, n1) not in boundary_edges:
             edges.append((n1, n2))
             qs.append(d)
-            colors.append(growth)
+            #colors.append(growth)
 
 
     pos = nx.get_node_attributes(G, 'pos')
@@ -323,7 +322,8 @@ def uniform_hist(sid:simInputData, G, in_nodes, out_nodes, boundary_edges, pnow,
     plt.subplot(spec.new_subplotspec((0, 0), colspan=4))
     plt.scatter(x_in, y_in, s=60, facecolors='white', edgecolors='black')
     plt.scatter(x_out, y_out, s=60, facecolors='black', edgecolors='white')
-    nx.draw_networkx_edges(G, pos, edgelist=edges, edge_color = colors, width=sid.ddrawconst * np.array(qs), edge_cmap = plt.cm.plasma)
+    #nx.draw_networkx_edges(G, pos, edgelist=edges, edge_color = colors, width=sid.ddrawconst * np.array(qs), edge_cmap = plt.cm.plasma)
+    nx.draw_networkx_edges(G, pos, edgelist=edges, width=sid.ddrawconst * np.array(qs))
     #nx.draw_networkx_nodes(G, pos, node_size = 25 * oxdraw, node_color = oxdraw, cmap='Reds')   
     plt.axis('equal')
     
@@ -485,3 +485,8 @@ def plot_params(sid:simInputData):
     
     plt.savefig(sid.dirname +'/parameters.png')
     plt.close()
+
+def save_vtk(sid, G, boundary_edges, pnow, cb_now, name):
+    from NetX_to_VTK import Nx_to_vtk
+    Nx_to_vtk(sid, G, boundary_edges, pnow, cb_now, name)
+

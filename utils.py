@@ -29,17 +29,58 @@ def d_update(F, t):
     return result
 
 def update_diameters(sid, edges, pnow, cb_now):
-    for i,e in enumerate(edges):
-        n1, n2, d, l, t = e
-        keff = sid.k / (1 + sid.k * d / sid.D / sid.alpha)
-        q = sid.c1 / sid.mu * d ** 4 * np.abs(pnow[n1] - pnow[n2]) / l
-        d += sid.dt * q * max(cb_now[n1], cb_now[n2]) / (np.pi * l * sid.gamma * d) * (1 - np.exp(-np.pi * d * keff * l / q))
-        if d < sid.dmin:
-            d = sid.dmin
-        if d > sid.dmax:
-            d = sid.dmax
-        edges[i] = (n1, n2, d, l, t)
-    return edges
+    breakthrough = False
+    if sid.adaptive_dt:
+        growth = np.zeros(len(edges))
+        dt = [sid.dtmax]
+        for i, e in enumerate(edges):
+            n1, n2, d, l, t = e
+            if pnow[n1] > pnow[n2]:  
+                q = d ** 4 * (pnow[n1] - pnow[n2]) / l
+                dd = q * cb_now[n1] / (sid.Da * l * d) * (1 - np.exp(-sid.Da / (1 + sid.G * d) * d * l / q))
+            elif pnow[n2] > pnow[n1]:
+                q = d ** 4 * (pnow[n2] - pnow[n1]) / l
+                dd = q * cb_now[n2] / (sid.Da * l * d) * (1 - np.exp(-sid.Da / (1 + sid.G * d) * d * l / q))
+            else:
+                dd = 0
+            growth[i] = dd
+            if dd > 0:
+                dt.append(sid.growth_rate * d / dd)
+        growth *= np.min(dt)
+
+        for i, e in enumerate(edges):
+            n1, n2, d, l, t = e
+            d += growth[i]
+            if d < sid.dmin:
+                d = sid.dmin
+            if d > sid.dmax:
+                d = sid.dmax
+            edges[i] = (n1, n2, d, l, t)
+            if t == 2 and d >= sid.dbreak:
+                breakthrough = True
+        return edges, np.min(dt), breakthrough
+    
+    else:
+        dt = sid.dt
+        for i, e in enumerate(edges):
+            n1, n2, d, l, t = e
+            if pnow[n1] > pnow[n2]:  
+                q = d ** 4 * (pnow[n1] - pnow[n2]) / l
+                dd = q * cb_now[n1] / (sid.Da * l * d) * (1 - np.exp(-sid.Da / (1 + sid.G * d) * d * l / q))
+            elif pnow[n2] > pnow[n1]:
+                q = d ** 4 * (pnow[n2] - pnow[n1]) / l
+                dd = q * cb_now[n2] / (sid.Da * l * d) * (1 - np.exp(-sid.Da / (1 + sid.G * d) * d * l / q))
+            else:
+                dd = 0
+            d += dt * dd
+            if d < sid.dmin:
+                d = sid.dmin
+            if d > sid.dmax:
+                d = sid.dmax
+            edges[i] = (n1, n2, d, l, t)
+            if t == 2 and d >= sid.dbreak:
+                breakthrough = True
+        return edges, dt, breakthrough
 
 def make_dir(sid):
         # if not os.path.isdir(sid.dirname):
@@ -110,56 +151,39 @@ class simAnalysisData:
     vegf = []
     signal = []
 
-def collect_data(sid, edges, in_nodes, out_nodes, pnow, vnow, oxnow, oxresult):
-    V = 0
-    V_q = 0
-    S = 0
-    S_q = 0
-    q2 = 0
-    q4 = 0
-    N = 0
-    L = 0
-    for n1, n2, d, l, t in edges:
-        q = sid.c1 / sid.mu * d ** 4 * np.abs(pnow[n1] - pnow[n2]) / l
-        V0 = np.pi * (d / 2) ** 2 * l
-        S0 = np.pi * d * l
-        V += V0
-        S += S0
-        if q > sid.q_prun:
-            V_q += V0
-            S_q += S0
-            q2 += q ** 2
-            q4 += q ** 4
-            N += 1
-        if (oxresult[n1] == 1 and oxresult[n2] == 1) or (oxresult[n1] == 2 and oxresult[n2] == 2):
-            L += l
-    A = (N - q2 ** 2 / q4) / (N - 1)
-    ox_out = 0
-    for node in out_nodes:
-        ox_out += oxnow[node]
-    ox_out = ox_out / len(out_nodes)
-    oxnow_nodes1 = np.sum(oxnow>0.1)
-    oxnow_nodes2 = np.sum(oxnow>0.2)
-    oxnow_nodes3 = np.sum(oxnow>0.3)
-    oxnow_nodes4 = np.sum(oxnow>0.4)
-    oxnow_nodes5 = np.sum(oxnow>0.5)
-    oxnow_nodes6 = np.sum(oxnow>0.6)
-    oxnow_nodes7 = np.sum(oxnow>0.7)
-    oxnow_nodes8 = np.sum(oxnow>0.8)
-    oxnow_nodes9 = np.sum(oxnow>0.9)
-    oxresult_nodes = np.sum(oxresult>0)
-    data = [pnow[in_nodes[0]], np.average(oxnow), np.average(oxnow ** 2), np.average(vnow), np.average(vnow ** 2), V, S, V_q, ox_out, A, oxnow_nodes1, oxnow_nodes2, oxnow_nodes3, oxnow_nodes4, oxnow_nodes5, oxnow_nodes6, oxnow_nodes7, oxnow_nodes8, oxnow_nodes9, oxresult_nodes, L]
-    def save_data(name, data):
-        success = 0
-        while success != 1:
-            try:
-                f = open(sid.dirname+'/'+name+'.txt', 'a')
-                np.savetxt(f, [data])
-                f.close()
-                success = 1
-            except PermissionError:
-                pass
-    save_data('params', data)
+def collect_data(sid, edges, cb_now, pnow, iter):
+    # data = []
+    # for n1, n2, d, l, t in edges:
+    #     data.append([cb_now[n1], cb_now[n2], d])
+    # def save_data(name, data):
+    #     success = 0
+    #     while success != 1:
+    #         try:
+    #             f = open(sid.dirname+'/'+name+'.txt', 'a')
+    #             np.savetxt(f, data)
+    #             f.close()
+    #             success = 1
+    #         except PermissionError:
+    #             pass
+    success = 0
+    while success != 1:
+        try:
+            f = open(sid.dirname+'/params.txt', 'a')
+            f.write("Iter "+str(iter))
+            f.write("\n")
+            for n1, n2, d, l, t in edges:
+                q = d ** 4 / l * np.abs(pnow[n1] - pnow[n2])
+                Da_eff_l = sid.Da / (1 + sid.G * d) * d * l / q
+                np.savetxt(f, [[cb_now[n1], cb_now[n2], d, q, l, Da_eff_l]], fmt = '%.6e')
+                f.write("\n")
+            f.write("\n")
+            f.write("\n")
+            f.close()
+            success = 1
+        except PermissionError:
+            pass
+
+    # save_data('params', data)
     # save_data('pin', pnow[in_nodes[0]])
     # save_data('oxnow', np.average(oxnow))
     # save_data('oxnow2', np.average(oxnow ** 2))
