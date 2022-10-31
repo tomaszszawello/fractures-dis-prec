@@ -8,17 +8,23 @@ from config import simInputData
 
 
 def create_vector(sid:simInputData, in_nodes, out_nodes, edges):
-    in_edges = 0
-    for n1, n2, d, l, t in edges:
-        if t == 1:
-            in_edges += 1
+    # in_edges = 0
+    # for n1, n2, d, l, t in edges:
+    #     if t == 1:\\\\\\\\\\\\\\\\\
+    #         in_edges += 1
+    data, row, col = [], [], []
     presult = np.zeros(sid.nsq)
     for node in in_nodes:
-        #presult[node] = -sid.qin * in_edges
-        presult[node] = -sid.qin * 2 * len(in_nodes)
-    for node in out_nodes:
-        presult[node] = sid.pout
-    return presult
+        data.append(sid.qin * 2 * len(in_nodes))
+        row.append(node)
+        col.append(0)
+    #for node in out_nodes:
+    #    data.append(-sid.qin * 2 * len(in_nodes))
+    #    row.append(node)
+    #    col.append(0)
+    return spr.csc_matrix((data, (row, col)), shape=(sid.nsq, 1))
+
+
 
 def update_matrix(sid:simInputData, edges, in_nodes, out_nodes):
 

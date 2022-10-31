@@ -197,7 +197,7 @@ def set_geometry(n, G=[], geo='rect', R=25, R_s=5, *args, **kwargs):
         for neigh in G.neighbors(node):
             if neigh not in in_nodes:
                 d = G[node][neigh]['d']
-                l = G[node][neigh]['length']
+                l = G[node][neigh]['l']
                 in_edges.append((node, neigh, d, l))
 
     for node in top_nodes:
@@ -267,7 +267,7 @@ def create_edgelist(G, in_nodes, out_nodes, boundary_nodes_out = [], boundary_no
 
     for n1, n2 in G.edges():
         d = G[n1][n2]['d']
-        l = G[n1][n2]['length']
+        l = G[n1][n2]['l']
         if (n1 not in in_nodes and n1 not in out_nodes) and (n2 not in in_nodes and n2 not in out_nodes):
             edges.append((n1, n2, d, l, 0))
         elif n1 not in in_nodes and n2 in in_nodes:

@@ -31,7 +31,7 @@ def load(name):
         for node in new_pos:
             G1.add_node(node, pos = new_pos[node])
         for n1, n2, d, l, t in edges:
-            G1.add_edge(n1, n2, d = d, q = 0, length = l)
+            G1.add_edge(n1, n2, d = d, q = 0, l = l)
 
         return G1
     

@@ -92,7 +92,7 @@ def Build_delaunay_net(n, periodic = 'top', noise = ["uniform", 1, 1], dmin = 1,
     length_avr = 0
     for edge, l in zip(final_edges, final_edges_lengths):
         node, neigh = edge
-        G[node][neigh]['length'] = l
+        G[node][neigh]['l'] = l
         length_avr += l
         if noise[0] == "uniform":
             G[node][neigh]['d'] = np.random.rand() * noise[2] + noise[1]
@@ -107,7 +107,7 @@ def Build_delaunay_net(n, periodic = 'top', noise = ["uniform", 1, 1], dmin = 1,
     # Usunięcie zbyt długich krawędzi (szczególnie tych po brzegu)
     Gcopy = G.copy()
     for node, neigh in Gcopy.edges():
-        l = G[node][neigh]['length']
+        l = G[node][neigh]['l']
         if l > 3 * length_avr:
             G.remove_edge(node, neigh)
 

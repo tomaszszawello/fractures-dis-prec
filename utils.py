@@ -61,7 +61,6 @@ def update_diameters(sid, edges, pnow, cb_now):
         return edges, np.min(dt), breakthrough
     
     else:
-        dt = sid.dt
         for i, e in enumerate(edges):
             n1, n2, d, l, t = e
             if pnow[n1] > pnow[n2]:  
@@ -72,7 +71,7 @@ def update_diameters(sid, edges, pnow, cb_now):
                 dd = q * cb_now[n2] / (sid.Da * l * d) * (1 - np.exp(-sid.Da / (1 + sid.G * d) * d * l / q))
             else:
                 dd = 0
-            d += dt * dd
+            d += sid.dt * dd
             if d < sid.dmin:
                 d = sid.dmin
             if d > sid.dmax:
@@ -80,7 +79,7 @@ def update_diameters(sid, edges, pnow, cb_now):
             edges[i] = (n1, n2, d, l, t)
             if t == 2 and d >= sid.dbreak:
                 breakthrough = True
-        return edges, dt, breakthrough
+        return edges, sid.dt, breakthrough
 
 def make_dir(sid):
         # if not os.path.isdir(sid.dirname):
