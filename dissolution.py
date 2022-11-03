@@ -5,10 +5,14 @@ from config import simInputData
 
 
 def create_vector(sid:simInputData, in_nodes):
-    cb_result = np.zeros(sid.nsq)
+    data, row, col = [], [], []
     for node in in_nodes:
-        cb_result[node] = sid.cb_in
-    return cb_result
+        data.append(1)
+        row.append(node)
+        col.append(0)
+    return spr.csc_matrix((data, (row, col)), shape=(sid.nsq, 1))
+
+
 
 def update_matrix(sid:simInputData, pnow, edges):
     data, row, col = [], [], []

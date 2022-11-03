@@ -1,5 +1,6 @@
 from collections import defaultdict
 import numpy as np
+import networkx as nx
 import scipy.sparse as spr
 
 from utils import d_update
@@ -80,19 +81,25 @@ def update_matrix(sid:simInputData, edges, in_nodes, out_nodes):
 
 
 
-def update_network(G1, sid:simInputData, edges, pnow):
+def update_network(G1, sid:simInputData, edges, diams, flows, in_nodes, out_nodes):
     Q_in = 0
     Q_out = 0
+    
+    #nx.set_edge_attributes(G1, diams, name="d")
 
-    for n1, n2, d, l, t in edges:
+#    for i, e in enumerate(G1.edges()):
+#        n1, n2 = e
+    for i, e in enumerate(edges):
+        n1, n2, d, l, t = e
+        d = diams[i]
+        q = flows[i]
         G1[n1][n2]['d']= d
-        q = d ** 4 * np.abs(pnow[n1] - pnow[n2]) / l
         G1[n1][n2]['q'] = q
         
-        if t == 1:    
-            Q_in += q
-        if t == 2:
-            Q_out += q
+        if n1 in in_nodes or n2 in in_nodes:    
+            Q_in += np.abs(q)
+        if n1 in out_nodes or n2 in out_nodes:
+            Q_out += np.abs(q)
 
     print('Q_in =', Q_in, 'Q_out =', Q_out)
 
