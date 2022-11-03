@@ -18,9 +18,8 @@ sid, G, edges, in_nodes, out_nodes, boundary_edges = build(sid) #boundary edges?
 
 presult = Pr.create_vector(sid, in_nodes, out_nodes, edges)
 cb_result = Di.create_vector(sid, in_nodes)
-incidence, diams, lens = In.create_incidence_matrix(sid, edges)
-pres_inc, in_matrix, diag_matrix, vec_in = In.create_in_out_matrix(sid, edges, in_nodes, out_nodes)
-#np.savetxt('pres.txt', pres_inc.toarray())
+inc_matrix, mid_matrix, bound_matrix, in_matrix, diams, lens = In.create_matrices(sid, edges, in_nodes, out_nodes)
+
 iters = sid.old_iters + sid.iters
 time = sid.old_t + sid.tmax
 t = sid.old_t
@@ -29,25 +28,17 @@ breakthrough = False
 while t < time and i < iters and not breakthrough:
     print(f'Iter {i + 1}/{iters} Time {t:.2f}/{time:.2f}')
 
-    #pmatrix2 = Pr.update_matrix(sid, edges, in_nodes, out_nodes)
+    pmatrix2 = Pr.update_matrix(sid, edges, in_nodes, out_nodes)
     #pnow = solve_equation(pmatrix, presult)
-    # m1 = incidence.transpose() @ diams ** 4 @ lens @ incidence
-    # u, s, vh = spr.linalg.svds(m1)
-    # pinv = vh.T @ spr.linalg.inv(spr.diags(s)) @ u.T
-    # pnow = pres_inc.transpose() @ diams ** 4 @ lens @ pres_inc @ pinv @ presult
-    pmatrix = pres_inc.transpose() @ diams ** 4 @ lens @ incidence
-    #print (np.sum(diams ** 4 @ lens @ vec_in))
-    pmatrix3 = pmatrix.multiply(in_matrix) + np.sum(diams ** 4 @ lens @ vec_in) * diag_matrix
-    #np.savetxt('old.txt', pmatrix2.toarray())
-    #np.savetxt('new.txt', pmatrix3.toarray())
-    #np.savetxt('diag.txt', diag_matrix.toarray())
-    #print (type(presult))
-    pnow = solve_equation(pmatrix3, presult)
-    #np.savetxt('pnow.txt', presult.toarray())
-
+    p_matrix = inc_matrix.transpose() @ spr.diags(diams ** 4 / lens) @ inc_matrix
+    p_matrix = p_matrix.multiply(mid_matrix) + bound_matrix
+    pnow = solve_equation(p_matrix, presult)
+    q_in = np.abs(np.sum(diams ** 4 / lens * np.array(in_matrix @ pnow)))
+    pnow *= sid.qin * 2 * len(in_nodes) / q_in
 
     cb_matrix = Di.update_matrix(sid, pnow, edges)
     cb_now = solve_equation(cb_matrix, cb_result)
+    #np.savetxt('old.txt', cb_matrix.toarray())
 
     if i % sid.plot_every == 0:
         G = Pr.update_network(G, sid, edges, pnow)

@@ -15,7 +15,7 @@ def create_vector(sid:simInputData, in_nodes, out_nodes, edges):
     data, row, col = [], [], []
     presult = np.zeros(sid.nsq)
     for node in in_nodes:
-        data.append(sid.qin * 2 * len(in_nodes))
+        data.append(1)
         row.append(node)
         col.append(0)
     #for node in out_nodes:
