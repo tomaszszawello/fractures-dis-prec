@@ -52,7 +52,7 @@ while t < time and i < iters and not breakthrough:
 
     #cb_matrix = Di.update_matrix(sid, pnow, edges)
     cb_now = solve_equation(cb_new, cb_result)
-    dd = (spr.diags(flow) @ inc_matrix > 0) @ cb_now * np.abs(flow)  / (sid.Da * lens * diams) * (1 - np.exp(-sid.Da / (1 + sid.G * diams) * diams * lens / np.abs(flow)))
+    dd = np.abs((spr.diags(flow) @ inc_matrix > 0)) @ cb_now * np.abs(flow)  / (sid.Da * lens * diams) * (1 - np.exp(-sid.Da / (1 + sid.G * diams) * diams * lens / np.abs(flow)))
     
 
     if i % sid.plot_every == 0:
@@ -66,7 +66,7 @@ while t < time and i < iters and not breakthrough:
     if sid.data_collection and i % sid.collect_data_every == 0:
         collect_data(sid, edges, cb_now, pnow, i)
 
-    diams += dd
+    diams += sid.dt * dd
 
     #edges, dt, breakthrough = update_diameters(sid, edges, pnow, cb_now)
 
@@ -81,4 +81,4 @@ while t < time and i < iters and not breakthrough:
 if i != 1:
     Sv.save('/save.dill', sid, G, edges, in_nodes, out_nodes, boundary_edges)
     G = Pr.update_network(G, sid, edges, diams, flow, in_nodes, out_nodes)
-    Dr.uniform_hist(sid, G, in_nodes, out_nodes, boundary_edges, pnow, cb_now, name=f'{sid.old_iters:04d}t{t:.2f}.png')
+    #Dr.uniform_hist(sid, G, in_nodes, out_nodes, boundary_edges, pnow, cb_now, name=f'{sid.old_iters:04d}t{t:.2f}.png')
