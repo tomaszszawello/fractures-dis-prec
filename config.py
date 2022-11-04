@@ -1,13 +1,11 @@
 import numpy as np
-from utils import fParams
 
 class simInputData:
-    n = 200 # rozmiar siatki
-    iters = 10  # liczba iteracji
+    n = 100 # rozmiar siatki
+    iters = 1001  # liczba iteracji
     tmax = 1000
     plot_every = 1000
     save_every = 10000
-    collect_data_every = 100
 
     figsize = 10
 
@@ -21,15 +19,9 @@ class simInputData:
     noise = ["gaussian", 1, 0] #gaussowski rozkład srednic, mu, sigma
     #noise = ["lognormal", 1, 0.3] #log-normalny rozkład srednic, mu, sigma
 
-    data_collection = True
-
-    qin = 1 # jednostki? przepływ na wejściu
-    #pin = 1 # jednostki? ciśnienie na wejściu
+    qin = 1 # przepływ na wejściu
     pout = 0  # jednostki? ciśnienie na wyjściu
-    #mu = 1e-3 #kg/(m s) współczynnik lepkości dynamicznej
     l = 1  # początkowa długosć krawędzi
-    #c1 = np.pi / 128  # stała przepływu
-
 
     cb_in = 1 # mol / dm^3
 
@@ -42,21 +34,17 @@ class simInputData:
     adaptive_dt = False
     dt = 0.01
     growth_rate = 0.05 # maksymalny procent średnicy o jaki może urosnąć krawędź
-    dtmax = 5
+    dt_max = 5
 
     breakthrough = True
-    dbreak = 4
-
-    dmin = 0.01
-    dmax = 30000
-
+    d_break = 4
 
     qdrawconst = 15
     ddrawconst = 0.5
 
     load = 3 # 0- dane z config, 1- wczytanie danych z ewoluowanej sieci (plik save), 2- wczytanie templatki (plik template)
     load_name = 'rect50/G1.00Daeff1.00vtk/3'
-    vtk_name = 'network_200x200.vtk'
+    vtk_name = 'network_100x100.vtk'
 
     #geo = "cylindrical"
     #geo = "donut"

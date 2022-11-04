@@ -1,7 +1,6 @@
 import numpy as np
 import networkx as nx
 import delaunay as De
-from oxygen import create_vector
 
 # Funkcje do znajdowania wezlow na okregu
 def find_circle_nodes(G, n, R):

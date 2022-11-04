@@ -37,6 +37,9 @@ def create_matrices(sid:simInputData, edges, in_nodes, out_nodes):
     sparse csr matrix
         diagonal matrix of input and output nodes (nsq x nsq)
     
+    sparse csr matrix
+        matrix of connections for inlet edges (ne x nsq)
+
     diams : list
         vector of edge diameters
     

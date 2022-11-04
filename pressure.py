@@ -1,84 +1,76 @@
-from collections import defaultdict
 import numpy as np
-import networkx as nx
 import scipy.sparse as spr
 
-from utils import d_update
-
 from config import simInputData
+from utils import solve_equation
 
 
-def create_vector(sid:simInputData, in_nodes, out_nodes, edges):
-    # in_edges = 0
-    # for n1, n2, d, l, t in edges:
-    #     if t == 1:\\\\\\\\\\\\\\\\\
-    #         in_edges += 1
+def create_vector(sid:simInputData, in_nodes):
+    """ Creates vector result for pressure calculation.
+    
+    For inlet and outlet nodes elements of the vector correspond explicitly
+    to the pressure in nodes, for regular nodes elements of the vector equal
+    0 correspond to flow continuity.
+
+    Parameters
+    -------
+    sid : simInputData class object
+        all config parameters of the simulation, here we use attributes:
+        nsq - number of nodes in the network squared
+    in_nodes : list
+        list of inlet nodes   
+    
+    Returns
+    -------
+    scipy sparse vector
+        result vector for pressure calculation
+    """
     data, row, col = [], [], []
-    presult = np.zeros(sid.nsq)
     for node in in_nodes:
         data.append(1)
         row.append(node)
         col.append(0)
-    #for node in out_nodes:
-    #    data.append(-sid.qin * 2 * len(in_nodes))
-    #    row.append(node)
-    #    col.append(0)
     return spr.csc_matrix((data, (row, col)), shape=(sid.nsq, 1))
 
+def find_flow(sid, diams, lens, inc_matrix, mid_matrix, bound_matrix, in_matrix, pressure_b, in_nodes):
+    """ Calculates pressure and flow.
 
+    Parameters
+    -------
+    sid : simInputData class object
+        all config parameters of the simulation, here we use attributes:
+        qin - characteristic flow for inlet edge
+    diams : numpy array
+        current diameters of edges
+    lens : numpy array
+        lengths of edges
+    inc_matrix : scipy sparse array
+        incidence matrix
+    mid_matrix : scipy sparse array
+        matrix zeroing rows for input and output nodes
+    bound_matrix : scipy sparse array
+        diagonal matrix with ones for input and output nodes
+    in_matrix : scipy sparse array
+        incidence matrix for inlet edges
+    pressure_b : scipy sparse vector
+        result vector for pressure equation
+    in_nodes : list
+        list of inlet nodes
 
-def update_matrix(sid:simInputData, edges, in_nodes, out_nodes):
-
-    data, row, col = [], [], []
-    insert = defaultdict(float)
-    diag = np.zeros(sid.nsq)
-    for n1, n2, d, l, t in edges:
-        res = d ** 4 / l
-        if t == 0:
-            data.append(res)
-            row.append(n1)
-            col.append(n2)
-            data.append(res)
-            row.append(n2)
-            col.append(n1)
-            diag[n1] -= res
-            diag[n2] -= res
-        elif t == 1:
-            data.append(res)
-            row.append(n1)
-            col.append(n2)
-            diag[n1] -= res
-            insert[n1] += res
-        elif t == 2:
-            data.append(res)
-            row.append(n1)
-            col.append(n2)
-            diag[n1] -= res
-    for node, datum in enumerate(diag):
-        if datum != 0:
-            row.append(node)
-            col.append(node)
-            data.append(datum)
-
-    for node in out_nodes:
-        row.append(node)
-        col.append(node)
-        data.append(1)
-
-    sum_insert = sum(insert.values())
-
-    for node in in_nodes:
-        data.append(-sum_insert)
-        row.append(node)
-        col.append(node)
-
-        for ins_node, ins in insert.items():
-            data.append(ins)
-            row.append(node)
-            col.append(ins_node)
-
-    return spr.csr_matrix((data, (row, col)), shape=(sid.nsq, sid.nsq))
-
+    Returns
+    -------
+    pressure : numpy array
+        vector of pressure in nodes
+    flow : numpy array
+        vector of flows in edges
+    """
+    p_matrix = inc_matrix.transpose() @ spr.diags(diams ** 4 / lens) @ inc_matrix # create matrix
+    p_matrix = p_matrix.multiply(mid_matrix) + bound_matrix
+    pressure = solve_equation(p_matrix, pressure_b)
+    q_in = np.abs(np.sum(diams ** 4 / lens * (in_matrix @ pressure))) # calculate inlet flow
+    pressure *= sid.qin * 2 * len(in_nodes) / q_in # normalize pressure to match condition for constant inlet flow
+    flow = diams ** 4 / lens * (inc_matrix @ pressure)
+    return pressure, flow
 
 
 def update_network(G1, sid:simInputData, edges, diams, flows, in_nodes, out_nodes):

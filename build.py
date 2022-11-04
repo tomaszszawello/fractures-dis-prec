@@ -2,7 +2,6 @@ import delaunay as De
 import save as Sv
 
 from geometry import set_geometry, create_edgelist
-from oxygen import create_vector
 from utils import make_dir
 from utils_vtk import build_VTK
 
