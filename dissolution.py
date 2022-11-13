@@ -17,6 +17,8 @@ def create_vector(sid:simInputData, in_nodes):
     sid : simInputData class object
         all config parameters of the simulation, here we use attributes:
         nsq - number of nodes in the network squared
+        cb_in - B concentration in inlet nodes
+
     in_nodes : list
         list of inlet nodes   
     
@@ -27,13 +29,13 @@ def create_vector(sid:simInputData, in_nodes):
     """
     data, row, col = [], [], []
     for node in in_nodes:
-        data.append(1)
+        data.append(sid.cb_in)
         row.append(node)
         col.append(0)
     return spr.csc_matrix((data, (row, col)), shape=(sid.nsq, 1))
 
 def find_cb(sid, diams, lens, flow, inc_matrix, in_nodes, out_nodes, cb_b):
-    """ Calculates pressure and flow.
+    """ Calculates B concentration.
 
     Parameters
     -------
@@ -59,8 +61,8 @@ def find_cb(sid, diams, lens, flow, inc_matrix, in_nodes, out_nodes, cb_b):
     
     Returns
     -------
-    flow : numpy array
-        vector of flows in edges
+    cb : numpy array
+        vector of B concentration in nodes
     """
     cb_inc = np.abs(inc_matrix.transpose() @ (spr.diags(flow) @ inc_matrix > 0)) # find incidence for cb (only upstream flow matters)
     qc = flow * np.exp(-sid.Da / (1 + sid.G * diams) * diams * lens / np.abs(flow)) # find vector with non-diagonal coefficients

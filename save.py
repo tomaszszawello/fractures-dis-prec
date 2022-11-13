@@ -2,9 +2,9 @@ import networkx as nx
 import dill
 from config import simInputData
                                                                             
-def save(name, sid:simInputData, G, edges, in_nodes, out_nodes, boundary_edges):
+def save(name, sid:simInputData, G, in_nodes, out_nodes, boundary_edges):
     pos = nx.get_node_attributes(G,'pos')
-    All = [sid, edges, in_nodes, out_nodes, boundary_edges, pos]
+    All = [sid, [], in_nodes, out_nodes, boundary_edges, pos]
 
     with open(sid.dirname+name, 'wb') as file:
         dill.dump(All, file)
@@ -35,11 +35,11 @@ def load(name):
         return G1
     
     G1 = reproduct()
-    return  sid, G1, edges, in_nodes, out_nodes, boundary_edges
+    return  sid, G1, in_nodes, out_nodes, boundary_edges
 
 
 def save_config(sid:simInputData):
     f = open(sid.dirname+'/config.txt', 'w')
     for key, val in sid.__class__.__dict__.items():
         f.write(f'{key} = {val} \r')
-    f.close()     
+    f.close()

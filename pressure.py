@@ -66,6 +66,7 @@ def find_flow(sid, diams, lens, inc_matrix, mid_matrix, bound_matrix, in_matrix,
     in_nodes : list
         list of inlet nodes
 
+
     Returns
     -------
     pressure : numpy array
@@ -83,26 +84,9 @@ def find_flow(sid, diams, lens, inc_matrix, mid_matrix, bound_matrix, in_matrix,
     return pressure, flow
 
 
-def update_network(G1, sid:simInputData, edges, diams, flows, in_nodes, out_nodes):
-    Q_in = 0
-    Q_out = 0
-    
-    #nx.set_edge_attributes(G1, diams, name="d")
-
-#    for i, e in enumerate(G1.edges()):
-#        n1, n2 = e
-    for i, e in enumerate(edges):
-        n1, n2, d, l, t = e
-        d = diams[i]
-        q = flows[i]
-        G1[n1][n2]['d']= d
-        G1[n1][n2]['q'] = q
-        
-        if n1 in in_nodes or n2 in in_nodes:    
-            Q_in += np.abs(q)
-        if n1 in out_nodes or n2 in out_nodes:
-            Q_out += np.abs(q)
-
-    print('Q_in =', Q_in, 'Q_out =', Q_out)
-
+def update_network(G1, diams, flow):
+    for i, e in enumerate(G1.edges()):
+        n1, n2 = e
+        G1[n1][n2]['d']= diams[i]
+        G1[n1][n2]['q'] = flow[i]
     return G1

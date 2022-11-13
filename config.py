@@ -1,8 +1,8 @@
 import numpy as np
 
 class simInputData:
-    n = 200 # rozmiar siatki
-    iters = 10001  # liczba iteracji
+    n = 50 # rozmiar siatki
+    iters = 1000  # liczba iteracji
     tmax = 100000
     plot_every = 1000
     save_every = 10000
@@ -14,6 +14,9 @@ class simInputData:
 
     Da = Da_eff * (1 + G)
 
+    K = 0.5
+    Gamma = 2
+
     d0 = 0.100861
     #noise = ["uniform", 1, 0.9] #jednorodny rozkład srednic, srednica początkowa, diameter_wiggle_param
     noise = ["gaussian", 1, 0] #gaussowski rozkład srednic, mu, sigma
@@ -24,6 +27,7 @@ class simInputData:
     l = 1  # początkowa długosć krawędzi
 
     cb_in = 1 # mol / dm^3
+    cc_in = 0
 
     #alpha = 4 # liczba Sherwooda
     #D = 3e-3 # mm^2/s stała dyfuzji HCl
@@ -44,7 +48,7 @@ class simInputData:
 
     load = 3 # 0- dane z config, 1- wczytanie danych z ewoluowanej sieci (plik save), 2- wczytanie templatki (plik template)
     load_name = 'rect50/G1.00Daeff1.00vtk/3'
-    vtk_name = 'network_200x200.vtk'
+    vtk_name = 'network_50x50.vtk'
 
     #geo = "cylindrical"
     #geo = "donut"

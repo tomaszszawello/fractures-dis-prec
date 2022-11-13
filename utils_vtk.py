@@ -5,7 +5,7 @@ import numpy as np
 from config import simInputData
 
 
-def save_VTK(sid, G, boundary_edges, pnow, cb_now, name): 
+def save_VTK(sid, G, boundary_edges, diams, lens, flow, pressure, cb, cc, name): 
     """
     This function is written using VTK module
     Input:
@@ -41,13 +41,14 @@ def save_VTK(sid, G, boundary_edges, pnow, cb_now, name):
         
 
     point_data = vtk.vtkDoubleArray()
-    point_data.SetNumberOfComponents(2)
+    point_data.SetNumberOfComponents(3)
     point_data.SetComponentName(0, 'p')
     point_data.SetComponentName(1, 'cb')
+    point_data.SetComponentName(2, 'cc')
     for n in G.nodes():
         (x,y,z) = node_pos[n]
         points.InsertPoint(n,x,y,z)
-        point_data.InsertNextTuple([pnow[n], cb_now[n]])
+        point_data.InsertNextTuple([pressure[n], cb[n], cc[n]])
     
     #Filling zeros at deleted nodes
     # try:
@@ -76,25 +77,37 @@ def save_VTK(sid, G, boundary_edges, pnow, cb_now, name):
     cell_data_cb_out.SetNumberOfComponents(1)
     cell_data_cb_out.SetName('cb_out')
    
+    cell_data_cc_in = vtk.vtkDoubleArray()
+    cell_data_cc_in.SetNumberOfComponents(1)
+    cell_data_cc_in.SetName('cc in')
+   
+    cell_data_cc_out = vtk.vtkDoubleArray()
+    cell_data_cc_out.SetNumberOfComponents(1)
+    cell_data_cc_out.SetName('cc_out')
+
     tmp_u = []; tmp_v = [];
-    for e in G.edges():
+    for i, e in enumerate(G.edges()):
         u=e[0] 
         v=e[1]
         if (u, v) not in boundary_edges and (v, u) not in boundary_edges:
             lines.InsertNextCell(2)  
             lines.InsertCellPoint(u) 
             lines.InsertCellPoint(v)
-            cell_data_d.InsertNextTuple([G[u][v]['d'] * sid.d0])
-            cell_data_l.InsertNextTuple([G[u][v]['l']])
-            cell_data_q.InsertNextTuple([G[u][v]['q']])
-            cell_data_cb_in.InsertNextTuple([cb_now[u]])
-            cell_data_cb_out.InsertNextTuple([cb_now[v]])            
+            cell_data_d.InsertNextTuple([diams[i] * sid.d0])
+            cell_data_l.InsertNextTuple([lens[i]])
+            cell_data_q.InsertNextTuple([flow[i]])
+            cell_data_cb_in.InsertNextTuple([cb[u]])
+            cell_data_cb_out.InsertNextTuple([cb[v]])
+            cell_data_cc_in.InsertNextTuple([cc[u]])
+            cell_data_cc_out.InsertNextTuple([cc[v]]) 
 
     edgeData.GetCellData().AddArray(cell_data_d)
     edgeData.GetCellData().AddArray(cell_data_l)
     edgeData.GetCellData().AddArray(cell_data_q)
     edgeData.GetCellData().AddArray(cell_data_cb_in)
     edgeData.GetCellData().AddArray(cell_data_cb_out)
+    edgeData.GetCellData().AddArray(cell_data_cc_in)
+    edgeData.GetCellData().AddArray(cell_data_cc_out)
 
     edgeData.SetPoints(points) 
     edgeData.SetLines(lines)
@@ -169,9 +182,9 @@ def build_VTK(sid:simInputData):
 
     in_nodes = list(range(n))
     out_nodes = list(range(nkw - n, nkw))
-    edges = []
     G_edges = []
-    qtot = 0
+    diams = []
+    lens = []
     boundary_edges = []
     n0 = 0
     d0 = 0
@@ -196,16 +209,8 @@ def build_VTK(sid:simInputData):
         if d != 0:
             if not ((n1 < n and n2 >= nkw - n) or (n2 < n and n1 >= nkw - n)):
                 G_edges.append((n1, n2))
-            if n1 >= n and n2 >= n and n1 < nkw - n and n2 < nkw - n:
-                edges.append((n1, n2, d, l, 0))
-            elif n1 < n and n2 >= n:
-                edges.append((n2, n1, d, l, 1))
-            elif n1 >= n and n2 < n:
-                edges.append((n1, n2, d, l, 1))
-            elif n1 >= nkw - n and n2 <  nkw - n:
-                edges.append((n2, n1, d, l, 2))
-            elif n1 < nkw - n and n2 >= nkw - n:
-                edges.append((n1, n2, d, l, 2))
+                diams.append(d)
+                lens.append(l)
 
             if (n1 % n == n-1 and n2 % n == 0) or (n2 % n == n-1 and n1 % n == 0):
                 boundary_edges.append((n1, n2))
@@ -223,7 +228,8 @@ def build_VTK(sid:simInputData):
         G.nodes[node]["pos"] = nodes[node]
 
     for i, edge in enumerate(G.edges()):
-        G[edge[0]][edge[1]]['d'] = edges[i][2]
-        G[edge[0]][edge[1]]['l'] = edges[i][3]
+        G[edge[0]][edge[1]]['d'] = diams[i]
+        G[edge[0]][edge[1]]['l'] = lens[i]
 
-    return G, edges, in_nodes, out_nodes, boundary_edges
+    return G, in_nodes, out_nodes, boundary_edges
+    
