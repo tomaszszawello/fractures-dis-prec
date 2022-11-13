@@ -17,6 +17,7 @@ def create_vector(sid:simInputData, in_nodes):
     sid : simInputData class object
         all config parameters of the simulation, here we use attributes:
         nsq - number of nodes in the network squared
+
     in_nodes : list
         list of inlet nodes   
     
@@ -40,20 +41,28 @@ def find_flow(sid, diams, lens, inc_matrix, mid_matrix, bound_matrix, in_matrix,
     sid : simInputData class object
         all config parameters of the simulation, here we use attributes:
         qin - characteristic flow for inlet edge
+
     diams : numpy array
         current diameters of edges
+
     lens : numpy array
         lengths of edges
+
     inc_matrix : scipy sparse array
         incidence matrix
+
     mid_matrix : scipy sparse array
         matrix zeroing rows for input and output nodes
+
     bound_matrix : scipy sparse array
         diagonal matrix with ones for input and output nodes
+
     in_matrix : scipy sparse array
         incidence matrix for inlet edges
+
     pressure_b : scipy sparse vector
         result vector for pressure equation
+
     in_nodes : list
         list of inlet nodes
 
@@ -61,6 +70,7 @@ def find_flow(sid, diams, lens, inc_matrix, mid_matrix, bound_matrix, in_matrix,
     -------
     pressure : numpy array
         vector of pressure in nodes
+
     flow : numpy array
         vector of flows in edges
     """

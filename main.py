@@ -15,6 +15,7 @@ sid, G, edges, in_nodes, out_nodes, boundary_edges = build(sid) #boundary edges?
 pressure_b = Pr.create_vector(sid, in_nodes)
 cb_b = Di.create_vector(sid, in_nodes)
 inc_matrix, mid_matrix, bound_matrix, in_matrix, diams, lens = In.create_matrices(sid, edges, in_nodes, out_nodes)
+#in_vector, out_vector = In.create_bound_vectors(sid, in_nodes, out_nodes)
 
 iters, tmax, i, t, breakthrough = initialize_iterators(sid)
 
@@ -36,4 +37,5 @@ while t < tmax and i < iters and not breakthrough:
 
 if i != 1:
     G = Pr.update_network(G, sid, edges, diams, flow, in_nodes, out_nodes)
+    save_VTK(sid, G, boundary_edges, pressure, cb, name=f'network_{sid.old_iters:04d}.vtk')
     Sv.save('/save.dill', sid, G, edges, in_nodes, out_nodes, boundary_edges)

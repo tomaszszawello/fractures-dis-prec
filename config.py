@@ -1,9 +1,9 @@
 import numpy as np
 
 class simInputData:
-    n = 100 # rozmiar siatki
-    iters = 1001  # liczba iteracji
-    tmax = 1000
+    n = 200 # rozmiar siatki
+    iters = 10001  # liczba iteracji
+    tmax = 100000
     plot_every = 1000
     save_every = 10000
 
@@ -31,7 +31,7 @@ class simInputData:
     #gamma = 60 # mol/dm^3
 
 
-    adaptive_dt = False
+    adaptive_dt = True
     dt = 0.01
     growth_rate = 0.05 # maksymalny procent średnicy o jaki może urosnąć krawędź
     dt_max = 5
@@ -44,7 +44,7 @@ class simInputData:
 
     load = 3 # 0- dane z config, 1- wczytanie danych z ewoluowanej sieci (plik save), 2- wczytanie templatki (plik template)
     load_name = 'rect50/G1.00Daeff1.00vtk/3'
-    vtk_name = 'network_100x100.vtk'
+    vtk_name = 'network_200x200.vtk'
 
     #geo = "cylindrical"
     #geo = "donut"

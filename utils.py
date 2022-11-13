@@ -13,6 +13,7 @@ def solve_equation(A, b):
     -------
     A : scipy sparse matrix
         matrix A from equation
+
     b : scipy sparse vector
         result b from equation
 
@@ -39,12 +40,16 @@ def initialize_iterators(sid):
     -------
     iters : int 
         max no. of new iterations
+
     i : int
         iterator in range from old iterations to sum of old and new
+
     tmax : float
         max new time
+
     t : float
         time iterator in range from old time to sum of old and new
+
     breakthrough : bool
         parameter stating if the system was dissolved (if diameter of edge
         going to the output grew at least sid.d_break times)
@@ -65,10 +70,13 @@ def update_iterators(sid, i, t, dt):
         all config parameters of the simulation, here we use attributes:
         old_iters - no. of previous iterations (if loaded from saved file)
         old_t - time of previous simulation (if loaded from saved file)
+
     i : int
         current iteration
+
     t : float
         current time
+
     dt : float
         current timestep
 
@@ -76,6 +84,7 @@ def update_iterators(sid, i, t, dt):
     -------
     i : int
         current iteration
+
     t : float
         current time
     """
@@ -98,14 +107,19 @@ def update_diameters(sid, flow, cb, diams, lens, inc_matrix):
         growth_rate - if adaptive timestep is on, maximum percentage of diameter which edge can grow
         dt_max - if adaptive timestep is on, maximal timestep
         dt - timestep if adaptive timestep is off
+
     flow : numpy array
         current flow in edges
+
     cb : numpy array
         current concentration in nodes
+
     diams : numpy array
         current diameters of edges
+
     lens : numpy array
         lengths of edges
+
     inc_matrix : scipy sparse array
         matrix of connections
 
@@ -113,10 +127,11 @@ def update_diameters(sid, flow, cb, diams, lens, inc_matrix):
     -------
     diams : numpy array
         new diameters of edges
+
     dt : float
         current timestep
     """
-    cb_growth = np.abs((spr.diags(flow) @ inc_matrix > 0)) @ cb # creates list of concentrations which should be                                                                 # used for growth of each edge (upstream one)
+    cb_growth = np.abs((spr.diags(flow) @ inc_matrix > 0)) @ cb # creates list of concentrations which should be used for growth of each edge (upstream one)
     diameter_change = cb_growth * np.abs(flow)  / (sid.Da * lens * diams) * (1 - np.exp(-sid.Da / (1 + sid.G * diams) * diams * lens / np.abs(flow)))
     if sid.adaptive_dt:
         dt = sid.growth_rate / np.max(diameter_change / diams)

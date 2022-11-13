@@ -93,3 +93,38 @@ def create_matrices(sid:simInputData, edges, in_nodes, out_nodes):
         spr.csr_matrix((data_bound, (row_bound, col_bound)), shape=(sid.nsq, sid.nsq)), \
         spr.csr_matrix((data_in, (row_in, col_in)), shape=(ne, sid.nsq)), \
         np.array(diams), np.array(lens)
+
+def create_bound_vectors(sid, in_nodes, out_nodes):
+    """ Creates vectors containing inlet and outlet nodes.
+
+    Parameters
+    -------
+    sid : simInputData class object
+        all config parameters of the simulation, here we use attributes:
+        nsq - number of nodes in the network squared
+
+    in_nodes : list
+        list of input nodes
+    
+    out_nodes : list
+        list of output nodes
+    
+    Returns
+    -------
+    scipy sparse vector
+        vector with 1 in place of inlet nodes
+
+    scipy sparse vector
+        vector with 1 in place of outlet nodes
+    """
+    data_in, row_in, col_in = [], [], []
+    for node in in_nodes:
+        data_in.append(1)
+        row_in.append(node)
+        col_in.append(0)
+    data_out, row_out, col_out = [], [], []
+    for node in out_nodes:
+        data_out.append(1)
+        row_out.append(node)
+        col_out.append(0)
+    return spr.csc_matrix((data_in, (row_in, col_in)), shape=(sid.nsq, 1)), spr.csc_matrix((data_out, (row_out, col_out)), shape=(sid.nsq, 1))
