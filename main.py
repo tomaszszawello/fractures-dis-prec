@@ -1,4 +1,5 @@
 import dissolution as Di
+import draw_net as Dr
 import incidence as In
 import precipitation as Pi
 import pressure as Pr
@@ -32,13 +33,14 @@ while t < tmax and i < iters and not breakthrough:
         check_flow(flow, in_edges, out_edges)
         save_VTK(sid, G, boundary_edges, diams, lens, flow, pressure, cb, cc, name=f'network_{sid.old_iters:04d}.vtk')
 
-    # diams, dt = update_diameters(sid, flow, cb, diams, lens, inc_matrix)
+    # diams, dt = update_diameters(sid, flow, cb, diams, lens, inc_matrix, out_edges)
     diams, dt, breakthrough = update_diameters_pi(sid, flow, cb, cc, diams, lens, inc_matrix, out_edges)
 
     i, t = update_iterators(sid, i, t, dt)
 
 if i != 1:
     G = Pr.update_network(G, diams, flow)
+    Dr.uniform_hist(sid, G, in_nodes, out_nodes, boundary_edges, cb, cc, name=f'network_{sid.old_iters:.2f}.png')
     check_flow(flow, in_edges, out_edges)
     save_VTK(sid, G, boundary_edges, diams, lens, flow, pressure, cb, cc, name=f'network_{sid.old_iters:04d}.vtk')
     Sv.save('/save.dill', sid, G, in_nodes, out_nodes, boundary_edges)

@@ -1,21 +1,21 @@
 import numpy as np
 
 class simInputData:
-    n = 50 # rozmiar siatki
-    iters = 1000  # liczba iteracji
+    n = 100 # rozmiar siatki
+    iters = 1000 # liczba iteracji
     tmax = 100000
     plot_every = 1000
     save_every = 10000
 
     figsize = 10
 
-    Da_eff = 1
+    Da_eff = 0.1
     G = 1
 
     Da = Da_eff * (1 + G)
 
-    K = 0.5
-    Gamma = 2
+    K = 2
+    Gamma = 1
 
     d0 = 0.100861
     #noise = ["uniform", 1, 0.9] #jednorodny rozkład srednic, srednica początkowa, diameter_wiggle_param
@@ -34,6 +34,8 @@ class simInputData:
     #k = 1 # mm/s stała reakcji CaC03 + HCl
     #gamma = 60 # mol/dm^3
 
+    dmin = 0.01
+    dmax = 1000
 
     adaptive_dt = True
     dt = 0.01
@@ -46,9 +48,9 @@ class simInputData:
     qdrawconst = 15
     ddrawconst = 0.5
 
-    load = 3 # 0- dane z config, 1- wczytanie danych z ewoluowanej sieci (plik save), 2- wczytanie templatki (plik template)
-    load_name = 'rect50/G1.00Daeff1.00vtk/3'
-    vtk_name = 'network_50x50.vtk'
+    load = 3 # 0 - dane z config, 1 - wczytanie danych z ewoluowanej sieci (plik save), 2 - wczytanie templatki (plik template)
+    load_name = 'rect100/G1.00Daeff1.00vtk/45'
+    vtk_name = 'network_100x100.vtk'
 
     #geo = "cylindrical"
     #geo = "donut"

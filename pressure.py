@@ -19,7 +19,7 @@ def create_vector(sid:simInputData, in_nodes):
         nsq - number of nodes in the network squared
 
     in_nodes : list
-        list of inlet nodes   
+        list of inlet nodes
     
     Returns
     -------

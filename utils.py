@@ -1,10 +1,7 @@
-from smtplib import OLDSTYLE_AUTH
-import networkx as nx
 import numpy as np
 import os
 import scipy.sparse.linalg as sprlin
 import scipy.sparse as spr
-from delaunay import find_node
 
 def solve_equation(A, b):
     """ Solves matrix equation A * x = b.
@@ -94,7 +91,7 @@ def update_iterators(sid, i, t, dt):
     sid.old_t += dt # update simulation time in configuration class
     return i, t
 
-def update_diameters(sid, flow, cb, diams, lens, inc_matrix):
+def update_diameters(sid, flow, cb, diams, lens, inc_matrix, out_edges):
     """ Updates diameters.
 
     Parameters
@@ -123,6 +120,9 @@ def update_diameters(sid, flow, cb, diams, lens, inc_matrix):
     inc_matrix : scipy sparse array
         matrix of connections
 
+    out_edges : numpy array
+        vector with 1 for outlet edges and 0 otherwise
+
     Returns
     -------
     diams : numpy array
@@ -130,6 +130,9 @@ def update_diameters(sid, flow, cb, diams, lens, inc_matrix):
 
     dt : float
         current timestep
+    
+    breakthrough : bool
+        information whether network is dissolved
     """
     cb_growth = np.abs((spr.diags(flow) @ inc_matrix > 0)) @ cb # creates list of concentrations which should be used for growth of each edge (upstream one)
     diameter_change = cb_growth * np.abs(flow)  / (sid.Da * lens * diams) * (1 - np.exp(-sid.Da / (1 + sid.G * diams) * diams * lens / np.abs(flow)))
@@ -140,6 +143,8 @@ def update_diameters(sid, flow, cb, diams, lens, inc_matrix):
     else:
         dt = sid.dt
     diams += dt * diameter_change
+    if np.max(out_edges * diams) > sid.d_break:
+        breakthrough = True
     return diams, dt
 
 def update_diameters_pi(sid, flow, cb, cc, diams, lens, inc_matrix, out_edges):
@@ -184,6 +189,9 @@ def update_diameters_pi(sid, flow, cb, cc, diams, lens, inc_matrix, out_edges):
 
     dt : float
         current timestep
+    
+    breakthrough : bool
+        information whether network is dissolved
     """
     # create list of concentrations which should be used for
     # growth of each edge (upstream one)
@@ -191,7 +199,7 @@ def update_diameters_pi(sid, flow, cb, cc, diams, lens, inc_matrix, out_edges):
     growth_matrix = np.abs((spr.diags(flow) @ inc_matrix > 0))
     cb_growth = growth_matrix @ cb
     cc_growth = growth_matrix @ cc
-    diameter_growth = cb_growth * np.abs(flow)  / (sid.Da * lens * diams) * (1 
+    diameter_growth = cb_growth * np.abs(flow)  / (sid.Da * lens * diams) * (1
     - np.exp(-sid.Da / (1 + sid.G * diams) * diams * lens / np.abs(flow)))
     diameter_shrink_cb = cb_growth * np.abs(flow)  / (sid.Da * lens * diams
     * sid.Gamma) / (sid.K - 1) * (sid.K * (1 - np.exp(-sid.Da / (1 + sid.G
