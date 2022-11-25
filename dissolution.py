@@ -72,7 +72,11 @@ def find_cb(sid, diams, lens, flow, inc_matrix, in_nodes, out_nodes, cb_b):
     for node in in_nodes:
         diag[node] = 1 # set diagonal for input nodes to 1
     for node in out_nodes:
-        diag[node] *= 2 # multiply diagonal for output nodes (they have no outlet, so inlet flow is equal to whole flow)
+        if diag[node] != 0: # fix for nodes which are connected only to other out_nodes - without it we get a singular matrix (whole row of zeros)
+            diag[node] *= 2 # multiply diagonal for output nodes (they have no outlet, so inlet flow is equal to whole flow)
+        else:
+            diag[node] = 1
     cb_matrix.setdiag(diag) # replace diagonal
+    #np.savetxt('cb3.txt', cb_matrix.toarray())
     cb = solve_equation(cb_matrix, cb_b)
     return cb

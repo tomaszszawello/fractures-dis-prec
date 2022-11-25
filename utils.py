@@ -92,7 +92,7 @@ def update_iterators(sid, i, t, dt):
     return i, t
 
 def update_diameters(sid, flow, cb, diams, lens, inc_matrix, out_edges):
-    """ Updates diameters.
+    """ Updates diameters in case of dissolution.
 
     Parameters
     -------
@@ -148,7 +148,7 @@ def update_diameters(sid, flow, cb, diams, lens, inc_matrix, out_edges):
     return diams, dt
 
 def update_diameters_pi(sid, flow, cb, cc, diams, lens, inc_matrix, out_edges):
-    """ Updates diameters.
+    """ Updates diameters in case of dissolution + precipitation.
 
     Parameters
     -------

@@ -1,6 +1,6 @@
 import delaunay as De
 
-def set_geometry(n, geo='rect', *args, **kwargs):
+def set_geometry(G, n, geo='rect', *args, **kwargs):
     in_nodes, out_nodes= [], []
     if geo == 'rect':
         in_nodes = list(range(n))

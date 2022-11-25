@@ -5,12 +5,14 @@ from matplotlib import gridspec
 
 from config import simInputData
 
-def uniform_hist(sid:simInputData, G, in_nodes, out_nodes, boundary_edges, cb, cc, name):
+def uniform_hist(sid:simInputData, G, in_nodes, out_nodes, boundary_edges, cb, cc, tpos, name):
     d_hist = []
     q_hist = []
 
-    edges = []
-    qs = []
+    edges1 = []
+    qs1 = []
+    edges2 = []
+    qs2 = []
 
     for n1, n2 in G.edges():
         q = G[n1][n2]['q']
@@ -20,9 +22,12 @@ def uniform_hist(sid:simInputData, G, in_nodes, out_nodes, boundary_edges, cb, c
         d_hist.append(d)
 
         if (n1, n2) not in boundary_edges and (n2, n1) not in boundary_edges:
-            edges.append((n1, n2))
-            qs.append(d)
-
+            if G[n1][n2]['c']:
+                edges1.append((n1, n2))
+                qs1.append(d)
+            else:
+                edges2.append((n1, n2))
+                qs2.append(d)                
 
     pos = nx.get_node_attributes(G, 'pos')
 
@@ -36,15 +41,22 @@ def uniform_hist(sid:simInputData, G, in_nodes, out_nodes, boundary_edges, cb, c
         x_out.append(pos[node][0])
         y_out.append(pos[node][1])
 
+    x_tr, y_tr = [], []
+    for node in tpos:
+        x_tr.append(node[0])
+        y_tr.append(node[1])
+
     plt.figure(figsize=(sid.figsize * 1.25, sid.figsize))
     spec = gridspec.GridSpec(ncols=4, nrows=2, height_ratios=[5, 1])
     
     plt.subplot(spec.new_subplotspec((0, 0), colspan=4))
     plt.scatter(x_in, y_in, s=60, facecolors='white', edgecolors='black')
     plt.scatter(x_out, y_out, s=60, facecolors='black', edgecolors='white')
-    #nx.draw_networkx_edges(G, pos, edgelist=edges, edge_color = colors, width=sid.ddrawconst * np.array(qs), edge_cmap = plt.cm.plasma)
-    nx.draw_networkx_edges(G, pos, edgelist=edges, width=sid.ddrawconst * np.array(qs))
-    #nx.draw_networkx_nodes(G, pos, node_size = 25 * oxdraw, node_color = oxdraw, cmap='Reds')   
+    plt.scatter(x_tr, y_tr, s=30, facecolors='red', edgecolors='black')
+    nx.draw_networkx_edges(G, pos, edgelist=edges1, edge_color = 'r', width=sid.ddrawconst * np.array(qs1))
+    nx.draw_networkx_edges(G, pos, edgelist=edges2, edge_color = 'k', width=sid.ddrawconst * np.array(qs2))    
+    #nx.draw_networkx_edges(G, pos, edgelist=edges, width=sid.ddrawconst * np.array(qs), edge_color=colors)
+    #nx.draw_networkx_nodes(G, pos, node_size = 25 * oxdraw, node_color = oxdraw, cmap='Reds')
     plt.axis('equal')
     
     plt.subplot(spec[4]).set_title('Diameter')

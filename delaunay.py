@@ -101,6 +101,7 @@ def Build_delaunay_net(n, periodic = 'top', noise = ["uniform", 1, 1], dmin = 1,
         elif noise[0] == "lognormal":
             G[node][neigh]['d'] = np.random.lognormal(noise[1], noise[2])
         G[node][neigh]['q'] = 0
+        G[node][neigh]['color'] = 0
 
     length_avr /= len(G.edges())
 

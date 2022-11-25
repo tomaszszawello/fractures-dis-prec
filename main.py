@@ -4,6 +4,7 @@ import incidence as In
 import precipitation as Pi
 import pressure as Pr
 import save as Sv
+import triangles as Tr
 
 from build import build
 from utils import check_flow, initialize_iterators, update_iterators, update_diameters_pi
@@ -13,12 +14,13 @@ from config import simInputData
 
 sid = simInputData()
 sid, G, in_nodes, out_nodes, boundary_edges = build(sid)
-
+tpos = Tr.find_triangles(G)
 pressure_b = Pr.create_vector(sid, in_nodes)
 cb_b = Di.create_vector(sid, in_nodes)
 inc_matrix, mid_matrix, bound_matrix, in_matrix, diams, lens, in_edges, \
     out_edges = In.create_matrices(sid, G, in_nodes, out_nodes)
 
+diams0 = diams.copy()
 iters, tmax, i, t, breakthrough = initialize_iterators(sid)
 
 while t < tmax and i < iters and not breakthrough:
@@ -32,6 +34,8 @@ while t < tmax and i < iters and not breakthrough:
     if i % sid.plot_every == 0:
         check_flow(flow, in_edges, out_edges)
         save_VTK(sid, G, boundary_edges, diams, lens, flow, pressure, cb, cc, name=f'network_{sid.old_iters:04d}.vtk')
+        G = Pr.update_network(G, diams, diams0, flow)
+        Dr.uniform_hist(sid, G, in_nodes, out_nodes, boundary_edges, cb, cc, tpos, name=f'network_{sid.old_iters:.2f}.png')
 
     # diams, dt = update_diameters(sid, flow, cb, diams, lens, inc_matrix, out_edges)
     diams, dt, breakthrough = update_diameters_pi(sid, flow, cb, cc, diams, lens, inc_matrix, out_edges)
@@ -39,8 +43,8 @@ while t < tmax and i < iters and not breakthrough:
     i, t = update_iterators(sid, i, t, dt)
 
 if i != 1:
-    G = Pr.update_network(G, diams, flow)
-    Dr.uniform_hist(sid, G, in_nodes, out_nodes, boundary_edges, cb, cc, name=f'network_{sid.old_iters:.2f}.png')
+    G = Pr.update_network(G, diams, diams0, flow)
+    Dr.uniform_hist(sid, G, in_nodes, out_nodes, boundary_edges, cb, cc, tpos, name=f'network_{sid.old_iters:.2f}.png')
     check_flow(flow, in_edges, out_edges)
     save_VTK(sid, G, boundary_edges, diams, lens, flow, pressure, cb, cc, name=f'network_{sid.old_iters:04d}.vtk')
     Sv.save('/save.dill', sid, G, in_nodes, out_nodes, boundary_edges)
