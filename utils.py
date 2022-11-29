@@ -147,7 +147,7 @@ def update_diameters(sid, flow, cb, diams, lens, inc_matrix, out_edges):
         breakthrough = True
     return diams, dt
 
-def update_diameters_pi(sid, flow, cb, cc, diams, lens, inc_matrix, out_edges):
+def update_diameters_pi(sid, flow, cb, cc, diams, lens, inc_matrix, triangles_inc, vols, out_edges):
     """ Updates diameters in case of dissolution + precipitation.
 
     Parameters
@@ -217,9 +217,11 @@ def update_diameters_pi(sid, flow, cb, cc, diams, lens, inc_matrix, out_edges):
         dt = sid.dt
     diams += dt * diameter_change
     diams = (diams > 0) * diams
+    vols -= triangles_inc.T @ (diameter_growth * dt / 2)
+    vols = (vols > 0) * vols
     if np.max(out_edges * diams) > sid.d_break:
         breakthrough = True
-    return diams, dt, breakthrough
+    return diams, vols, dt, breakthrough
 
 def check_flow(flow, in_edges, out_edges):
     Q_in = np.sum(in_edges * np.abs(flow))

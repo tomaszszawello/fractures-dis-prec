@@ -21,6 +21,7 @@ def build(sid:simInputData):
 
     elif sid.load == 1:
         sid, G, in_nodes, out_nodes, boundary_edges = Sv.load(sid.load_name+'/save.dill')
+        # we need to save edges data to be able to load; but save diams and lens will break template
 
     elif sid.load == 2:
         sid2, G, in_nodes, out_nodes, boundary_edges = Sv.load(sid.load_name+'/template.dill')
