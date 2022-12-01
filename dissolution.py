@@ -34,7 +34,7 @@ def create_vector(sid:simInputData, in_nodes):
         col.append(0)
     return spr.csc_matrix((data, (row, col)), shape=(sid.nsq, 1))
 
-def find_cb(sid, diams, lens, flow, inc_matrix, in_nodes, out_nodes, cb_b):
+def find_cb(sid, diams, lens, flow, inc_matrix, in_nodes, out_nodes, cb_b, triangles_inc, vol_a):
     """ Calculates B concentration.
 
     Parameters
@@ -65,7 +65,10 @@ def find_cb(sid, diams, lens, flow, inc_matrix, in_nodes, out_nodes, cb_b):
         vector of B concentration in nodes
     """
     cb_inc = np.abs(inc_matrix.transpose() @ (spr.diags(flow) @ inc_matrix > 0)) # find incidence for cb (only upstream flow matters)
-    qc = flow * np.exp(-sid.Da / (1 + sid.G * diams) * diams * lens / np.abs(flow)) # find vector with non-diagonal coefficients
+    vol_a_avail = (triangles_inc @ vol_a > 0) * 1
+    #qc = flow * np.exp(-sid.Da / (1 + sid.G * diams) * diams * lens / np.abs(flow)) # find vector with non-diagonal coefficients
+    qc = flow * vol_a_avail * np.exp(-sid.Da / (1 + sid.G * diams) * diams * lens / np.abs(flow)) + flow * (1 - vol_a_avail)
+    # if there is available volume, we include reduction of cb in pore, if not, then q_in cb_in = q_out cb_out
     qc_matrix = np.abs(inc_matrix.transpose() @ spr.diags(qc) @ inc_matrix)
     cb_matrix = cb_inc.multiply(qc_matrix)
     diag = -np.abs(inc_matrix.transpose()) @ np.abs(flow) / 2 # find diagonal coefficients (inlet flow for each node)

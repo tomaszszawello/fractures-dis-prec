@@ -67,3 +67,39 @@ def plot_data(sid:simInputData):
     
     plt.savefig(sid.dirname +'/params.png')
     plt.close()
+
+def check_flow(flow, in_edges, out_edges):
+    ''' Check flow conservation in the system (inflow and outflow)
+
+    Parameters
+    -------
+    flow : numpy array
+        vector of flows in the system
+    
+    in_edges : numpy array
+        list of edges with 1 for inlet edges and 0 otherwise
+
+    out_edges : numpy array
+        list of edges with 1 for outlet edges and 0 otherwise
+
+    Returns
+    -------
+    None
+    '''
+    Q_in = np.sum(in_edges * np.abs(flow))
+    Q_out = np.sum(out_edges * np.abs(flow))
+    print('Q_in =', Q_in, 'Q_out =', Q_out)
+
+def check_mass(sid, incidence, flow, cb, vols, in_edges, out_edges, dt, delta_b):
+    ''' Check mass balance in the system (inflow of solvent - outflow of solvent = dissolved volume)
+    '''
+    # np.savetxt('tr.txt', np.abs(incidence.T < 0) @ (np.abs(flow) * in_edges))
+    # print (np.sum(np.abs(incidence.T < 0) @ (np.abs(flow) * in_edges)))
+    # np.savetxt('tr.txt', np.abs(incidence.T > 0) @ (np.abs(flow) * out_edges))
+    # print (np.sum(np.abs(incidence.T > 0) @ (np.abs(flow) * out_edges)))
+    delta = (np.abs(incidence.T < 0) @ (np.abs(flow) * in_edges) - np.abs(incidence.T > 0) @ (np.abs(flow) * out_edges)) @ cb * dt
+    print (delta)
+    delta_b += delta
+    vol = np.sum(sid.vol_a_in-vols)
+    print (delta_b, sid.Da * vol, delta_b - sid.Da * vol)
+    return delta_b

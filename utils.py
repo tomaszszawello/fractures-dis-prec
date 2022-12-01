@@ -215,18 +215,16 @@ def update_diameters_pi(sid, flow, cb, cc, diams, lens, inc_matrix, triangles_in
             dt = sid.dt_max
     else:
         dt = sid.dt
+    vols -= triangles_inc.T @ (diams * diameter_growth * dt * lens / 2)
     diams += dt * diameter_change
     diams = (diams > 0) * diams
-    vols -= triangles_inc.T @ (diameter_growth * dt / 2)
+    #vols -= triangles_inc.T @ (diameter_growth * dt / 2)
     vols = (vols > 0) * vols
     if np.max(out_edges * diams) > sid.d_break:
         breakthrough = True
     return diams, vols, dt, breakthrough
 
-def check_flow(flow, in_edges, out_edges):
-    Q_in = np.sum(in_edges * np.abs(flow))
-    Q_out = np.sum(out_edges * np.abs(flow))
-    print('Q_in =', Q_in, 'Q_out =', Q_out)
+
 
 def make_dir(sid):
         i = 0

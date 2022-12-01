@@ -5,7 +5,7 @@ from matplotlib import gridspec
 
 from config import simInputData
 
-def uniform_hist(sid:simInputData, G, in_nodes, out_nodes, boundary_edges, cb, cc, tpos, name):
+def uniform_hist(sid:simInputData, G, in_nodes, out_nodes, boundary_edges, cb, cc, vols, triangles_pos, name):
     d_hist = []
     q_hist = []
 
@@ -42,7 +42,7 @@ def uniform_hist(sid:simInputData, G, in_nodes, out_nodes, boundary_edges, cb, c
         y_out.append(pos[node][1])
 
     x_tr, y_tr = [], []
-    for node in tpos:
+    for node in triangles_pos:
         x_tr.append(node[0])
         y_tr.append(node[1])
 
@@ -52,7 +52,7 @@ def uniform_hist(sid:simInputData, G, in_nodes, out_nodes, boundary_edges, cb, c
     plt.subplot(spec.new_subplotspec((0, 0), colspan=4))
     plt.scatter(x_in, y_in, s=60, facecolors='white', edgecolors='black')
     plt.scatter(x_out, y_out, s=60, facecolors='black', edgecolors='white')
-    plt.scatter(x_tr, y_tr, s=30, facecolors='red', edgecolors='black')
+    plt.scatter(x_tr, y_tr, s=1*(vols < 9), facecolors='red', edgecolors='black')
     nx.draw_networkx_edges(G, pos, edgelist=edges1, edge_color = 'r', width=sid.ddrawconst * np.array(qs1))
     nx.draw_networkx_edges(G, pos, edgelist=edges2, edge_color = 'k', width=sid.ddrawconst * np.array(qs2))    
     #nx.draw_networkx_edges(G, pos, edgelist=edges, width=sid.ddrawconst * np.array(qs), edge_color=colors)
