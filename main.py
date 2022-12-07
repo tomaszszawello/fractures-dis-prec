@@ -1,6 +1,7 @@
 import data as Da
 import dissolution as Di
 import draw_net as Dr
+import growth as Gr
 import incidence as In
 import precipitation as Pi
 import pressure as Pr
@@ -8,7 +9,7 @@ import save as Sv
 import volumes as Vo
 
 from build import build
-from utils import initialize_iterators, update_iterators, update_diameters_pi
+from utils import initialize_iterators, update_iterators
 from utils_vtk import save_VTK
 
 from config import simInputData
@@ -32,7 +33,7 @@ while t < tmax and i < iters and not breakthrough:
     print(f'Iter {i + 1}/{iters} Time {t:.2f}/{tmax:.2f}')
 
     pressure, flow = Pr.find_flow(sid, diams, lens, inc_matrix, mid_matrix, bound_matrix, in_matrix, pressure_b, in_nodes)
-    cb = Di.find_cb(sid, diams, lens, flow, inc_matrix, in_nodes, out_nodes, cb_b, triangles_inc, vol_a)
+    cb, alfa = Di.find_cb(sid, diams, lens, flow, inc_matrix, in_nodes, out_nodes, cb_b, triangles_inc, vol_a)
     cc_b = Pi.create_vector(sid, diams, lens, flow, inc_matrix, in_nodes, cb)
     cc = Pi.find_cc(sid, diams, lens, flow, inc_matrix, in_nodes, out_nodes, cc_b)
     if i % sid.plot_every == 0:
@@ -42,11 +43,12 @@ while t < tmax and i < iters and not breakthrough:
         Dr.uniform_hist(sid, G, in_nodes, out_nodes, boundary_edges, cb, cc, vol_a, triangles_pos, name=f'network_{sid.old_iters:.2f}.png')
 
     # diams, dt = update_diameters(sid, flow, cb, diams, lens, inc_matrix, out_edges)
-    diams, vol_a, dt, breakthrough = update_diameters_pi(sid, flow, cb, cc, diams, lens, inc_matrix, triangles_inc, vol_a, out_edges)
+    diams, vol_a, dt, breakthrough = Gr.update_diameters(sid, flow, cb, cc, diams, lens, inc_matrix, triangles_inc, vol_a, out_edges, alfa)
 
     i, t = update_iterators(sid, i, t, dt)
     Da.collect_data(sid, pressure)
-    delta_b = Da.check_mass(sid, inc_matrix, flow, cb, vol_a, in_edges, out_edges, dt, delta_b)
+    if sid.include_vol_a:
+        delta_b = Da.check_mass(sid, inc_matrix, flow, cb, vol_a, in_edges, out_edges, dt, delta_b)
 
 if i != 1:
     G = Pr.update_network(G, diams, diams0, flow)

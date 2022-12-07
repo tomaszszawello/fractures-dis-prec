@@ -41,38 +41,43 @@ def uniform_hist(sid:simInputData, G, in_nodes, out_nodes, boundary_edges, cb, c
         x_out.append(pos[node][0])
         y_out.append(pos[node][1])
 
-    x_tr, y_tr = [], []
-    for node in triangles_pos:
-        x_tr.append(node[0])
-        y_tr.append(node[1])
+    # x_tr, y_tr = [], []
+    # for node in triangles_pos:
+    #     x_tr.append(node[0])
+    #     y_tr.append(node[1])
 
+    cols = 5
     plt.figure(figsize=(sid.figsize * 1.25, sid.figsize))
-    spec = gridspec.GridSpec(ncols=4, nrows=2, height_ratios=[5, 1])
+    spec = gridspec.GridSpec(ncols=cols, nrows=2, height_ratios=[5, 1])
     
-    plt.subplot(spec.new_subplotspec((0, 0), colspan=4))
+    plt.subplot(spec.new_subplotspec((0, 0), colspan=cols))
     plt.scatter(x_in, y_in, s=60, facecolors='white', edgecolors='black')
     plt.scatter(x_out, y_out, s=60, facecolors='black', edgecolors='white')
-    plt.scatter(x_tr, y_tr, s=1*(vols < 9), facecolors='red', edgecolors='black')
+    #plt.scatter(x_tr, y_tr, s=1*(vols < 9), facecolors='red', edgecolors='black')
     nx.draw_networkx_edges(G, pos, edgelist=edges1, edge_color = 'r', width=sid.ddrawconst * np.array(qs1))
     nx.draw_networkx_edges(G, pos, edgelist=edges2, edge_color = 'k', width=sid.ddrawconst * np.array(qs2))    
     #nx.draw_networkx_edges(G, pos, edgelist=edges, width=sid.ddrawconst * np.array(qs), edge_color=colors)
     #nx.draw_networkx_nodes(G, pos, node_size = 25 * oxdraw, node_color = oxdraw, cmap='Reds')
     plt.axis('equal')
     
-    plt.subplot(spec[4]).set_title('Diameter')
+    plt.subplot(spec[cols]).set_title('Diameter')
     plt.hist(d_hist, bins=50)
     plt.yscale("log")
 
-    plt.subplot(spec[5]).set_title('Flow')
+    plt.subplot(spec[cols + 1]).set_title('Flow')
     plt.hist(q_hist, bins=50)
     plt.yscale("log")
 
-    plt.subplot(spec[6]).set_title('cb')
+    plt.subplot(spec[cols + 2]).set_title('cb')
     plt.hist(cb, bins=50)
     plt.yscale("log")
 
-    plt.subplot(spec[7]).set_title('cc')
+    plt.subplot(spec[cols + 3]).set_title('cc')
     plt.hist(cc, bins=50)
+    plt.yscale("log")
+
+    plt.subplot(spec[cols + 4]).set_title('vola')
+    plt.hist(vols, bins=50)
     plt.yscale("log")
     
     plt.savefig(sid.dirname + "/" + name)

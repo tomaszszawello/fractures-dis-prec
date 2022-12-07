@@ -34,11 +34,12 @@ def collect_data(sid:simInputData, pressure):
     sid : simInputData class object
         all config parameters of the simulation, here we use attributes:
         dirname - directory of current simulation
+        old_t - total time of simulation
 
     pressure : numpy array
         vector of current pressure
     '''
-    data = [np.max(pressure), 0]
+    data = [sid.old_t, 1 / np.max(pressure)]
     save_data(sid.dirname+'/params.txt', data)
 
 def plot_data(sid:simInputData):
@@ -54,18 +55,18 @@ def plot_data(sid:simInputData):
     data = np.loadtxt(f)
     n_data = data.shape[1]
     len_data = data.shape[0]
-    
+    t = data[:, 0]
     plt.figure(figsize=(15, 5))
     plt.suptitle('Parameters')
-    spec = gridspec.GridSpec(ncols=n_data, nrows=1)
+    spec = gridspec.GridSpec(ncols=n_data-1, nrows=1)
 
-    for i_data in range(n_data):
+    for i_data in range(n_data - 1):
         plt.subplot(spec[i_data]).set_title(f'Data {i_data}')
-        x = np.linspace(0, len_data, len_data)
-        plt.plot(x, data[:, i_data])
-        plt.xlabel('iterations')
+        plt.plot(t, data[:, i_data - 1] / data[0, i_data - 1])
+        plt.yscale('log')
+        plt.xlabel('simulation time')
     
-    plt.savefig(sid.dirname +'/params.png')
+    plt.savefig(sid.dirname + '/params.png')
     plt.close()
 
 def check_flow(flow, in_edges, out_edges):
@@ -98,8 +99,7 @@ def check_mass(sid, incidence, flow, cb, vols, in_edges, out_edges, dt, delta_b)
     # np.savetxt('tr.txt', np.abs(incidence.T > 0) @ (np.abs(flow) * out_edges))
     # print (np.sum(np.abs(incidence.T > 0) @ (np.abs(flow) * out_edges)))
     delta = (np.abs(incidence.T < 0) @ (np.abs(flow) * in_edges) - np.abs(incidence.T > 0) @ (np.abs(flow) * out_edges)) @ cb * dt
-    print (delta)
     delta_b += delta
     vol = np.sum(sid.vol_a_in-vols)
-    print (delta_b, sid.Da * vol, delta_b - sid.Da * vol)
+    print ('Used c_b =', delta_b, 'Dissolved v_a =', sid.Da * vol / 2, 'Difference =', delta_b - sid.Da * vol / 2)
     return delta_b
