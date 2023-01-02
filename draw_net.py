@@ -76,9 +76,9 @@ def uniform_hist(sid:simInputData, G, in_nodes, out_nodes, boundary_edges, cb, c
     plt.hist(cc, bins=50)
     plt.yscale("log")
 
-    plt.subplot(spec[cols + 4]).set_title('vola')
-    plt.hist(vols, bins=50)
-    plt.yscale("log")
+    # plt.subplot(spec[cols + 4]).set_title('vola')
+    # plt.hist(vols, bins=50)
+    # plt.yscale("log")
     
     plt.savefig(sid.dirname + "/" + name)
     plt.close()

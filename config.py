@@ -32,7 +32,7 @@ class simInputData:
 
     cb_in = 1 # mol / dm^3
     cc_in = 0
-    vol_a_in = 1
+    vol_a_in = 10
 
     #alpha = 4 # liczba Sherwooda
     #D = 3e-3 # mm^2/s stała dyfuzji HCl
@@ -42,9 +42,9 @@ class simInputData:
     dmin = 0.1
     dmax = 1000
 
-    k_it_th = 0.001
+    k_it_th = 0.00001
 
-    adaptive_dt = False
+    adaptive_dt = True
     dt = 0.01
     growth_rate = 0.05 # maksymalny procent średnicy o jaki może urosnąć krawędź
     dt_max = 5
@@ -65,7 +65,7 @@ class simInputData:
     #geo = "top"
     #geo = "own"
 
-    periodic = 'top' #none, top, side, all
+    periodic = 'none' #none, top, side, all
 
     #nodes_own = [[35, 35]]
     #nodes_own = [[40, 40], [60, 60], [60, 40], [40, 60], [50, 64], [50, 36], [36, 50], [64, 50]]

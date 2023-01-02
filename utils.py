@@ -32,7 +32,8 @@ def initialize_iterators(sid):
         tmax - max time of new simulation
         old_iters - no. of previous iterations (if loaded from saved file)
         old_t - time of previous simulation (if loaded from saved file)
-    
+        dt - initial timestep
+
     Returns
     -------
     iters : int 
@@ -47,6 +48,9 @@ def initialize_iterators(sid):
     t : float
         time iterator in range from old time to sum of old and new
 
+    dt : float
+        initial timestep
+
     breakthrough : bool
         parameter stating if the system was dissolved (if diameter of edge
         going to the output grew at least sid.d_break times)
@@ -55,8 +59,9 @@ def initialize_iterators(sid):
     tmax = sid.old_t + sid.tmax
     i = sid.old_iters
     t = sid.old_t
+    dt = sid.dt
     breakthrough = False
-    return iters, tmax, i, t, breakthrough
+    return iters, tmax, i, t, dt, breakthrough
 
 def update_iterators(sid, i, t, dt):
     """ Updates iterators in simulation and in configuration class.

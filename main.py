@@ -18,6 +18,8 @@ import numpy as np
 sid = simInputData()
 sid, G, in_nodes, out_nodes, boundary_edges = build(sid)
 triangles_inc, triangles_pos = Vo.find_triangles(G)
+np.savetxt('tr.txt', triangles_inc.toarray())
+np.savetxt('tr2.txt', np.array(np.sum(triangles_inc, axis = 1))[:, 0])
 vol_a = Vo.create_vector(sid, triangles_pos)
 pressure_b = Pr.create_vector(sid, in_nodes)
 cb_b = Di.create_vector(sid, in_nodes)
@@ -27,13 +29,13 @@ inc_matrix, mid_matrix, bound_matrix, in_matrix, diams, lens, in_edges, \
 delta_b = 0
 
 diams0 = diams.copy()
-iters, tmax, i, t, breakthrough = initialize_iterators(sid)
+iters, tmax, i, t, dt, breakthrough = initialize_iterators(sid)
 
 while t < tmax and i < iters and not breakthrough:
     print(f'Iter {i + 1}/{iters} Time {t:.2f}/{tmax:.2f}')
 
     pressure, flow = Pr.find_flow(sid, diams, lens, inc_matrix, mid_matrix, bound_matrix, in_matrix, pressure_b, in_nodes)
-    cb, alfa = Di.find_cb(sid, diams, lens, flow, inc_matrix, in_nodes, out_nodes, cb_b, triangles_inc, vol_a)
+    cb = Di.find_cb(sid, diams, lens, flow, inc_matrix, in_nodes, out_nodes, cb_b, triangles_inc, vol_a, dt)
     cc_b = Pi.create_vector(sid, diams, lens, flow, inc_matrix, in_nodes, cb)
     cc = Pi.find_cc(sid, diams, lens, flow, inc_matrix, in_nodes, out_nodes, cc_b)
     if i % sid.plot_every == 0:
@@ -43,7 +45,7 @@ while t < tmax and i < iters and not breakthrough:
         Dr.uniform_hist(sid, G, in_nodes, out_nodes, boundary_edges, cb, cc, vol_a, triangles_pos, name=f'network_{sid.old_iters:.2f}.png')
 
     # diams, dt = update_diameters(sid, flow, cb, diams, lens, inc_matrix, out_edges)
-    diams, vol_a, dt, breakthrough = Gr.update_diameters(sid, flow, cb, cc, diams, lens, inc_matrix, triangles_inc, vol_a, out_edges, alfa)
+    diams, vol_a, dt, breakthrough = Gr.update_diameters(sid, flow, cb, cc, diams, lens, inc_matrix, triangles_inc, vol_a, out_edges, dt)
 
     i, t = update_iterators(sid, i, t, dt)
     Da.collect_data(sid, pressure)
