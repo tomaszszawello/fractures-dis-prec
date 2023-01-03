@@ -49,7 +49,7 @@ def create_matrices(sid:simInputData, G, in_nodes, out_nodes):
     """
     ne = len(G.edges())
     data, row, col = [], [], [] # data for standard incidence matrix (ne x nsq)
-    diams, lens = [], [] # vectors of diameters and lengths
+    diams, fracture_lens, lens = [], [], [] # vectors of diameters and lengths
     data_mid, row_mid, col_mid = [], [], [] # data for matrix keeping connections of only middle nodes (nsq x nsq)
     data_bound, row_bound, col_bound = [], [], [] # data for diagonal matrix for input and output (nsq x nsq)
     data_in, row_in, col_in = [], [], [] # data for matrix keeping connections of only input nodes
@@ -68,6 +68,8 @@ def create_matrices(sid:simInputData, G, in_nodes, out_nodes):
         col.append(n2)
         diams.append(d)
         lens.append(l)
+        fracture_lens.append(G.nodes[n1]['fl'] + G.nodes[n2]['fl'])
+        #fracture_lens.append(1)
         if (n1 not in in_nodes and n1 not in out_nodes) and (n2 not in in_nodes and n2 not in out_nodes):
             data_mid.extend((1, 1))
             row_mid.extend((n1, n2))
@@ -110,5 +112,5 @@ def create_matrices(sid:simInputData, G, in_nodes, out_nodes):
         spr.csr_matrix((data_mid, (row_mid, col_mid)),shape=(sid.nsq, sid.nsq)), \
         spr.csr_matrix((data_bound, (row_bound, col_bound)), shape=(sid.nsq, sid.nsq)), \
         spr.csr_matrix((data_in, (row_in, col_in)), shape=(ne, sid.nsq)), \
-        np.array(diams), np.array(lens), in_edges, out_edges
+        np.array(diams), np.array(lens), np.array(fracture_lens), in_edges, out_edges
         

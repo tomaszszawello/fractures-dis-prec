@@ -86,8 +86,11 @@ def Build_delaunay_net(n, periodic = 'top', noise = ["uniform", 1, 1], dmin = 1,
 
     G.add_edges_from(final_edges)
 
+    fl = np.ones(nkw) # fracture lens
+
     for node in G.nodes:
         G.nodes[node]["pos"] = points[node]
+        G.nodes[node]["fl"] = fl[node]
 
     length_avr = 0
     for edge, l in zip(final_edges, final_edges_lengths):

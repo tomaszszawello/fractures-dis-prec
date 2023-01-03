@@ -34,14 +34,14 @@ def create_vector(sid:simInputData, in_nodes):
         col.append(0)
     return spr.csc_matrix((data, (row, col)), shape=(sid.nsq, 1))
 
-def find_cb(sid, diams, lens, flow, inc_matrix, in_nodes, out_nodes, cb_b, triangles_inc, vol_a, dt):
+def find_cb(sid, diams, fracture_lens, lens, flow, inc_matrix, in_nodes, out_nodes, cb_b, dt):
     if sid.include_vol_a:
         return find_cb_vol(sid, diams, lens, flow, inc_matrix, in_nodes, out_nodes, cb_b, triangles_inc, vol_a, dt)
     else:
-        return find_cb_novol(sid, diams, lens, flow, inc_matrix, in_nodes, out_nodes, cb_b)
+        return find_cb_novol(sid, diams, fracture_lens, lens, flow, inc_matrix, in_nodes, out_nodes, cb_b)
 
 
-def find_cb_novol(sid, diams, lens, flow, inc_matrix, in_nodes, out_nodes, cb_b):
+def find_cb_novol(sid, diams, fracture_lens, lens, flow, inc_matrix, in_nodes, out_nodes, cb_b):
     """ Calculates B concentration.
 
     Parameters
@@ -72,7 +72,7 @@ def find_cb_novol(sid, diams, lens, flow, inc_matrix, in_nodes, out_nodes, cb_b)
         vector of B concentration in nodes
     """
     cb_inc = np.abs(inc_matrix.transpose() @ (spr.diags(flow) @ inc_matrix > 0)) # find incidence for cb (only upstream flow matters)
-    qc = flow * np.exp(-sid.Da / (1 + sid.G * diams) * diams * lens / np.abs(flow)) # find vector with non-diagonal coefficients
+    qc = flow * np.exp(-sid.Da / (1 + sid.G * diams) * fracture_lens * lens / np.abs(flow)) # find vector with non-diagonal coefficients
     qc_matrix = np.abs(inc_matrix.transpose() @ spr.diags(qc) @ inc_matrix)
     cb_matrix = cb_inc.multiply(qc_matrix)
     diag = -np.abs(inc_matrix.transpose()) @ np.abs(flow) / 2 # find diagonal coefficients (inlet flow for each node)

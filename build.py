@@ -4,6 +4,7 @@ import save as Sv
 from geometry import set_geometry
 from utils import make_dir
 from utils_vtk import build_VTK
+from my_network import build_my
 
 from config import simInputData
 
@@ -33,6 +34,12 @@ def build(sid:simInputData):
     elif sid.load == 3:
         G, in_nodes, out_nodes, boundary_edges = build_VTK(sid)
         sid.dirname += 'vtk'
+        make_dir(sid)
+        Sv.save_config(sid)
+
+    elif sid.load == 4:
+        G, in_nodes, out_nodes, boundary_edges = build_my(sid)
+        sid.dirname += 'my'
         make_dir(sid)
         Sv.save_config(sid)
 

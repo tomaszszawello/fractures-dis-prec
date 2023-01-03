@@ -22,10 +22,15 @@ def find_triangles(G):
         n1, n2 = e
         neigh1 = G.neighbors(n1)
         neigh2 = G.neighbors(n2)
-        for node in set(neigh1).intersection(neigh2):
+        intersection = set(neigh1).intersection(neigh2)
+        if len(intersection) > 2:
+            print ('!!!!!!!!!!!!!')
+        for node in intersection:
             triangles_dict[(tuple(sorted((n1, n2, node))))].append(i)
     nt = len(triangles_dict.keys())
     #triangles = [*set(triangles)]
+    with open('trdict.txt', 'w') as f:
+        print(triangles_dict, file=f)
     for i, nodes in enumerate(triangles_dict.keys()):
         n1, n2, n3 = nodes
         triangles_pos.append((np.array(pos[n1]) + np.array(pos[n2]) + np.array(pos[n3])) / 3)

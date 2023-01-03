@@ -3,17 +3,17 @@ import scipy.sparse as spr
 
 from config import simInputData
 
-def update_diameters(sid, flow, cb, cc, diams, lens, inc_matrix, triangles_inc, vols, out_edges, dt):
+def update_diameters(sid, flow, cb, diams, fracture_lens, lens, inc_matrix, out_edges, dt):
     if sid.include_cc:
         if sid.include_vol_a:
             return update_diameters_dpv(sid, flow, cb, cc, diams, lens, inc_matrix, triangles_inc, vols, out_edges, dt)
         else:
             return update_diameters_dp(sid, flow, cb, cc, diams, lens, inc_matrix, out_edges, dt)
     else:
-        return update_diameters_d(sid, flow, cb, diams, lens, inc_matrix, out_edges, dt)
+        return update_diameters_d(sid, flow, cb, diams, fracture_lens, lens, inc_matrix, out_edges, dt)
         
 
-def update_diameters_d(sid, flow, cb, diams, lens, inc_matrix, out_edges):
+def update_diameters_d(sid, flow, cb, diams, fracture_lens, lens, inc_matrix, out_edges, dt):
     """ Updates diameters in case of dissolution.
 
     Parameters
@@ -56,8 +56,9 @@ def update_diameters_d(sid, flow, cb, diams, lens, inc_matrix, out_edges):
     breakthrough : bool
         information whether network is dissolved
     """
+    breakthrough = False
     cb_growth = np.abs((spr.diags(flow) @ inc_matrix > 0)) @ cb # creates list of concentrations which should be used for growth of each edge (upstream one)
-    diameter_change = cb_growth * np.abs(flow)  / (sid.Da * lens * diams) * (1 - np.exp(-sid.Da / (1 + sid.G * diams) * diams * lens / np.abs(flow)))
+    diameter_change = cb_growth * np.abs(flow)  / (sid.Da * lens * fracture_lens) * (1 - np.exp(-sid.Da / (1 + sid.G * diams) * fracture_lens * lens / np.abs(flow)))
     if sid.adaptive_dt:
         dt = sid.growth_rate / np.max(diameter_change / diams)
         if dt > sid.dt_max:

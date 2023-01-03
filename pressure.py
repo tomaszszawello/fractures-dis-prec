@@ -33,7 +33,7 @@ def create_vector(sid:simInputData, in_nodes):
         col.append(0)
     return spr.csc_matrix((data, (row, col)), shape=(sid.nsq, 1))
 
-def find_flow(sid, diams, lens, inc_matrix, mid_matrix, bound_matrix, in_matrix, pressure_b, in_nodes):
+def find_flow(sid, diams, fracture_lens, lens, inc_matrix, mid_matrix, bound_matrix, in_matrix, pressure_b, in_nodes):
     """ Calculates pressure and flow.
 
     Parameters
@@ -75,12 +75,12 @@ def find_flow(sid, diams, lens, inc_matrix, mid_matrix, bound_matrix, in_matrix,
     flow : numpy array
         vector of flows in edges
     """
-    p_matrix = inc_matrix.transpose() @ spr.diags(diams ** 4 / lens) @ inc_matrix # create matrix
+    p_matrix = inc_matrix.transpose() @ spr.diags(diams ** 3 * fracture_lens / 2 / lens) @ inc_matrix # create matrix
     p_matrix = p_matrix.multiply(mid_matrix) + bound_matrix
     pressure = solve_equation(p_matrix, pressure_b)
-    q_in = np.abs(np.sum(diams ** 4 / lens * (in_matrix @ pressure))) # calculate inlet flow
+    q_in = np.abs(np.sum(diams ** 3 * fracture_lens / 2 / lens * (in_matrix @ pressure))) # calculate inlet flow
     pressure *= sid.qin * 2 * len(in_nodes) / q_in # normalize pressure to match condition for constant inlet flow
-    flow = diams ** 4 / lens * (inc_matrix @ pressure)
+    flow = diams ** 3 * fracture_lens / 2 / lens * (inc_matrix @ pressure)
     return pressure, flow
 
 

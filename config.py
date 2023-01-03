@@ -1,5 +1,7 @@
 import numpy as np
 
+# zmienić wzory na ciśnienie na d^2, przecałkować wzory na koncentracje przy rozpuszczaniu, zastanowić się, jakie to ma znaczenia dla osadzania, rozważyć wizualizację
+
 class simInputData:
     n = 20 # rozmiar siatki
     iters = 1000 # liczba iteracji
@@ -9,7 +11,7 @@ class simInputData:
 
     figsize = 10
 
-    Da_eff = 1
+    Da_eff = 20
     G = 1
 
     Da = Da_eff * (1 + G)
@@ -17,8 +19,8 @@ class simInputData:
     K = 0.5
     Gamma = 1.5
 
-    include_cc = True
-    include_vol_a = True
+    include_cc = False
+    include_vol_a = False
 
 
     d0 = 0.100861
@@ -55,13 +57,13 @@ class simInputData:
     qdrawconst = 15
     ddrawconst = 0.5
 
-    load = 0 # 0 - dane z config, 1 - wczytanie danych z ewoluowanej sieci (plik save), 2 - wczytanie templatki (plik template)
+    load = 4 # 0 - dane z config, 1 - wczytanie danych z ewoluowanej sieci (plik save), 2 - wczytanie templatki (plik template)
     load_name = 'rect100/G1.00Daeff1.00/7'
     vtk_name = 'network_100x100.vtk'
 
     #geo = "cylindrical"
     #geo = "donut"
-    geo = "rect"
+    geo = "own"
     #geo = "top"
     #geo = "own"
 
