@@ -1,3 +1,4 @@
+import networkx as nx
 import numpy as np
 import scipy.sparse as spr
 
@@ -84,11 +85,7 @@ def find_flow(sid, diams, fracture_lens, lens, inc_matrix, mid_matrix, bound_mat
     return pressure, flow
 
 
-def update_network(G1, diams, diams0, flow):
-    colors = 1 * (diams < diams0 * 0.5)
-    for i, e in enumerate(G1.edges()):
-        n1, n2 = e
-        G1[n1][n2]['d']= diams[i]
-        G1[n1][n2]['q'] = flow[i]
-        G1[n1][n2]['c'] = colors[i]
-    return G1
+def update_network(G, edge_list, diams, flow):
+    nx.set_edge_attributes(G, dict(zip(edge_list, diams)), 'd')
+    nx.set_edge_attributes(G, dict(zip(edge_list, flow)), 'q')
+    return G

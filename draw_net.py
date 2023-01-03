@@ -83,26 +83,12 @@ def uniform_hist(sid:simInputData, G, in_nodes, out_nodes, boundary_edges, cb, c
     plt.savefig(sid.dirname + "/" + name)
     plt.close()
 
-def uniform_hist(sid:simInputData, G, in_nodes, out_nodes, boundary_edges, cb, name, data):
-    d_hist = []
-    q_hist = []
-
-    edges = []
-    qs = []
-
-    for n1, n2 in G.edges():
-        q = G[n1][n2]['q']
-        d = G[n1][n2]['d']
-
-        q_hist.append(np.abs(q))
-        d_hist.append(d)
-
-        if (n1, n2) not in boundary_edges and (n2, n1) not in boundary_edges:
-            edges.append((n1, n2))
-            if data == 'd':
-                qs.append(d)
-            else:
-                qs.append(sid.qdrawconst * q)                
+def uniform_hist(sid:simInputData, G, in_nodes, out_nodes, boundary_edges, diams, flow, cb, cc, name, data):
+    if data == 'd':
+        qs = diams * (1 - boundary_edges) * sid.ddrawconst
+    else:
+        qs = np.abs(flow) * (1 - boundary_edges) * sid.qdrawconst
+    
 
     pos = nx.get_node_attributes(G, 'pos')
 
@@ -129,26 +115,26 @@ def uniform_hist(sid:simInputData, G, in_nodes, out_nodes, boundary_edges, cb, n
     plt.scatter(x_in, y_in, s=60, facecolors='white', edgecolors='black')
     plt.scatter(x_out, y_out, s=60, facecolors='black', edgecolors='white')
     #plt.scatter(x_tr, y_tr, s=1*(vols < 9), facecolors='red', edgecolors='black')
-    nx.draw_networkx_edges(G, pos, edgelist=edges, edge_color = 'k', width=sid.ddrawconst * np.array(qs))    
+    nx.draw_networkx_edges(G, pos, edge_color = 'k', width=sid.ddrawconst * np.array(qs))    
     #nx.draw_networkx_edges(G, pos, edgelist=edges, width=sid.ddrawconst * np.array(qs), edge_color=colors)
     nx.draw_networkx_nodes(G, pos, node_size = 25, node_color = 'k')
     plt.axis('equal')
     
     plt.subplot(spec[cols]).set_title('Diameter')
-    plt.hist(d_hist, bins=50)
+    plt.hist(diams, bins=50)
     plt.yscale("log")
 
     plt.subplot(spec[cols + 1]).set_title('Flow')
-    plt.hist(q_hist, bins=50)
+    plt.hist(np.abs(flow), bins=50)
     plt.yscale("log")
 
     plt.subplot(spec[cols + 2]).set_title('cb')
     plt.hist(cb, bins=50)
     plt.yscale("log")
 
-    # plt.subplot(spec[cols + 3]).set_title('cc')
-    # plt.hist(cc, bins=50)
-    # plt.yscale("log")
+    plt.subplot(spec[cols + 3]).set_title('cc')
+    plt.hist(cc, bins=50)
+    plt.yscale("log")
 
     # plt.subplot(spec[cols + 4]).set_title('vola')
     # plt.hist(vols, bins=50)

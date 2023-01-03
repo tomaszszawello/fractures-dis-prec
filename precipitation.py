@@ -5,7 +5,7 @@ from config import simInputData
 from utils import solve_equation
 
 
-def create_vector(sid, diams, lens, flow, inc_matrix, in_nodes, cb):
+def create_vector(sid, diams, fracture_lens, lens, flow, inc_matrix, in_nodes, cb):
     """ Creates vector result for C concentration calculation.
 
     Parameters
@@ -43,9 +43,9 @@ def create_vector(sid, diams, lens, flow, inc_matrix, in_nodes, cb):
     # find incidence for cb (only upstream flow matters)
     cb_inc = np.abs(inc_matrix.transpose() @ (spr.diags(flow) @ inc_matrix > 0))
     # find vector with non-diagonal coefficients
-    qc = flow / (sid.K - 1) * (np.exp(-sid.Da / (1 + sid.G * diams) * diams
+    qc = flow / (sid.K - 1) * (np.exp(-sid.Da / (1 + sid.G * diams) * fracture_lens
     * lens / np.abs(flow)) - np.exp(-sid.Da * sid.K / (1 + sid.G * sid.K
-    * diams) * diams * lens / np.abs(flow)))
+    * diams) * fracture_lens * lens / np.abs(flow)))
     qc_matrix = np.abs(inc_matrix.transpose() @ spr.diags(qc) @ inc_matrix)
     cb_matrix = cb_inc.multiply(qc_matrix)
     cb_matrix.setdiag(np.zeros(sid.nsq)) # set diagonal to zero
@@ -55,7 +55,7 @@ def create_vector(sid, diams, lens, flow, inc_matrix, in_nodes, cb):
     return cc_b
 
 
-def find_cc(sid, diams, lens, flow, inc_matrix, in_nodes, out_nodes, cc_b):
+def find_cc(sid, diams, fracture_lens, lens, flow, inc_matrix, in_nodes, out_nodes, cc_b):
     """ Calculates pressure and flow.
 
     Parameters
@@ -98,7 +98,7 @@ def find_cc(sid, diams, lens, flow, inc_matrix, in_nodes, out_nodes, cc_b):
     # find incidence for cc (only upstream flow matters)
     cc_inc = np.abs(inc_matrix.transpose() @ (spr.diags(flow) @ inc_matrix > 0))
     # find vector with non-diagonal coefficients
-    qc = flow * np.exp(-sid.Da * sid.K / (1 + sid.G * sid.K * diams) * diams
+    qc = flow * np.exp(-sid.Da * sid.K / (1 + sid.G * sid.K * diams) * fracture_lens
     * lens / np.abs(flow))
     qc_matrix = np.abs(inc_matrix.transpose() @ spr.diags(qc) @ inc_matrix)
     cc_matrix = cc_inc.multiply(qc_matrix)

@@ -4,22 +4,22 @@ import numpy as np
 
 class simInputData:
     n = 20 # rozmiar siatki
-    iters = 1000 # liczba iteracji
+    iters = 5000 # liczba iteracji
     tmax = 100000
     plot_every = 100
     #save_every = 100
 
     figsize = 10
 
-    Da_eff = 20
+    Da_eff = 10
     G = 1
 
     Da = Da_eff * (1 + G)
 
-    K = 0.5
-    Gamma = 1.5
+    K = 0.6
+    Gamma = 1.3
 
-    include_cc = False
+    include_cc = True
     include_vol_a = False
 
 
