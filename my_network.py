@@ -15,15 +15,18 @@ def build_my(sid:simInputData):
     lens = [0.5, 0.2, 0.2, 0.4, 0.5, 0.5]
     fl = np.ones(n)
 
-    diams = diams / np.average(diams)
-    lens = lens / np.average(lens)
+    sid.d0 = np.average(diams)
+    sid.l0 = np.average(lens)
+    diams = diams / sid.d0
+    lens = lens / sid.l0
+
     for node in G.nodes:
         G.nodes[node]['pos'] = points[node]
         G.nodes[node]['fl'] = fl[node]
 
     G.add_edges_from(edges)
 
-    for i, e in enumerate(edges):
+    for i, e in enumerate(G.edges()):
         n1, n2 = e
         G[n1][n2]['d'] = diams[i]
         G[n1][n2]['l'] = lens[i]

@@ -21,6 +21,7 @@ sid, G, in_nodes, out_nodes, boundary_edges = build(sid)
 #vol_a = Vo.create_vector(sid, triangles_pos)
 pressure_b = Pr.create_vector(sid, in_nodes)
 cb_b = Di.create_vector(sid, in_nodes)
+
 inc_matrix, mid_matrix, bound_matrix, in_matrix, diams, fracture_lens, lens, in_edges, \
     out_edges, edge_list, boundary_edge_list = In.create_matrices(sid, G, in_nodes, out_nodes, boundary_edges)
 
@@ -32,13 +33,13 @@ iters, tmax, i, t, dt, breakthrough = initialize_iterators(sid)
 while t < tmax and i < iters and not breakthrough:
     print(f'Iter {i + 1}/{iters} Time {t:.2f}/{tmax:.2f}')
 
-    pressure, flow = Pr.find_flow(sid, diams, fracture_lens, lens, inc_matrix, mid_matrix, bound_matrix, in_matrix, pressure_b, in_nodes)
+    pressure, flow = Pr.find_flow(sid, diams, fracture_lens, lens, inc_matrix, mid_matrix, bound_matrix, in_matrix, pressure_b, in_edges)
     cb = Di.find_cb(sid, diams, fracture_lens, lens, flow, inc_matrix, in_nodes, out_nodes, cb_b, dt)
     cc_b = Pi.create_vector(sid, diams, fracture_lens, lens, flow, inc_matrix, in_nodes, cb)
     cc = Pi.find_cc(sid, diams, fracture_lens, lens, flow, inc_matrix, in_nodes, out_nodes, cc_b)
     if i % sid.plot_every == 0:
         Da.check_flow(flow, in_edges, out_edges)
-        #save_VTK(sid, G, boundary_edges, diams, lens, flow, pressure, cb, cc, name=f'network_{sid.old_iters:04d}.vtk')
+        save_VTK(sid, G, boundary_edges, diams, lens, flow, pressure, cb, cc, name=f'network_{sid.old_iters:04d}.vtk')
         G = Pr.update_network(G, edge_list, diams, flow)
         #Dr.uniform_hist(sid, G, in_nodes, out_nodes, boundary_edges, cb, cc, vol_a, triangles_pos, name=f'network_{sid.old_iters:.2f}.png')
         Dr.uniform_hist(sid, G, in_nodes, out_nodes, boundary_edge_list, diams, flow, cb, cc, name=f'd_{sid.old_iters:.2f}.png', data = 'd')
@@ -58,6 +59,6 @@ if i != 1:
     Dr.uniform_hist(sid, G, in_nodes, out_nodes, boundary_edge_list, diams, flow, cb, cc, name=f'd_{sid.old_iters:.2f}.png', data = 'd')
     Dr.uniform_hist(sid, G, in_nodes, out_nodes, boundary_edge_list, diams, flow, cb, cc, name=f'q_{sid.old_iters:.2f}.png', data = 'q')
     Da.check_flow(flow, in_edges, out_edges)
-    #save_VTK(sid, G, boundary_edges, diams, lens, flow, pressure, cb, cc, name=f'network_{sid.old_iters:04d}.vtk')
+    save_VTK(sid, G, boundary_edges, diams, lens, flow, pressure, cb, cc, name=f'network_{sid.old_iters:04d}.vtk')
     Sv.save('/save.dill', sid, G, in_nodes, out_nodes, boundary_edges)
     Da.plot_data(sid)

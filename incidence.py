@@ -116,5 +116,5 @@ def create_matrices(sid:simInputData, G, in_nodes, out_nodes, boundary_edges):
         spr.csr_matrix((data_mid, (row_mid, col_mid)),shape=(sid.nsq, sid.nsq)), \
         spr.csr_matrix((data_bound, (row_bound, col_bound)), shape=(sid.nsq, sid.nsq)), \
         spr.csr_matrix((data_in, (row_in, col_in)), shape=(ne, sid.nsq)), \
-        np.array(diams), np.array(lens), np.array(fracture_lens), in_edges, out_edges, edge_list, boundary_edge_list
+        np.array(diams), np.array(fracture_lens), np.array(lens), in_edges, out_edges, edge_list, boundary_edge_list
         

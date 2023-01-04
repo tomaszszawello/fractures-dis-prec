@@ -3,3 +3,7 @@
 *.dill
 *.txt
 *.vtk
+/.vscode/settings.json
+/out.prof
+/out.profile
+/test.py

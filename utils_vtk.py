@@ -94,7 +94,7 @@ def save_VTK(sid, G, boundary_edges, diams, lens, flow, pressure, cb, cc, name):
             lines.InsertCellPoint(u) 
             lines.InsertCellPoint(v)
             cell_data_d.InsertNextTuple([diams[i] * sid.d0])
-            cell_data_l.InsertNextTuple([lens[i]])
+            cell_data_l.InsertNextTuple([lens[i] * sid.l0])
             cell_data_q.InsertNextTuple([flow[i]])
             cell_data_cb_in.InsertNextTuple([cb[u]])
             cell_data_cb_out.InsertNextTuple([cb[v]])

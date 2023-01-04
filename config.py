@@ -11,7 +11,7 @@ class simInputData:
 
     figsize = 10
 
-    Da_eff = 10
+    Da_eff = 5
     G = 1
 
     Da = Da_eff * (1 + G)
@@ -24,6 +24,7 @@ class simInputData:
 
 
     d0 = 0.100861
+    l0 = 1
     #noise = ["uniform", 1, 0.9] #jednorodny rozkład srednic, srednica początkowa, diameter_wiggle_param
     noise = ["gaussian", 1, 0.1] #gaussowski rozkład srednic, mu, sigma
     #noise = ["lognormal", 1, 0.3] #log-normalny rozkład srednic, mu, sigma
