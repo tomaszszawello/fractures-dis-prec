@@ -5,7 +5,7 @@ import numpy as np
 from config import simInputData
 
 
-def save_VTK(sid, G, boundary_edges, diams, lens, flow, pressure, cb, cc, name): 
+def save_VTK(sid, G, apertures, fracture_lens, lens, flow, pressure, cb, name): 
     """
     This function is written using VTK module
     Input:
@@ -17,19 +17,8 @@ def save_VTK(sid, G, boundary_edges, diams, lens, flow, pressure, cb, cc, name):
 
     np={} 
 
-    pos = nx.get_node_attributes(G, 'pos')
+    pos = list(zip(nx.get_node_attributes(G, 'x').values(), nx.get_node_attributes(G, 'y').values(), nx.get_node_attributes(G, 'z').values()))
 
-    for node in pos:
-        pos2d = pos[node]
-        pos[node] = (pos2d[0], pos2d[1], 0)
-
-    node_pos = pos
-
-    for n in G.nodes(): 
-        try: 
-            np[n]=node_pos[n] 
-        except KeyError: 
-            raise nx.NetworkXError
 
         # Generate the polyline for the spline. 
     points = vtk.vtkPoints() 
@@ -41,14 +30,13 @@ def save_VTK(sid, G, boundary_edges, diams, lens, flow, pressure, cb, cc, name):
         
 
     point_data = vtk.vtkDoubleArray()
-    point_data.SetNumberOfComponents(3)
+    point_data.SetNumberOfComponents(2)
     point_data.SetComponentName(0, 'p')
     point_data.SetComponentName(1, 'cb')
-    point_data.SetComponentName(2, 'cc')
     for n in G.nodes():
-        (x,y,z) = node_pos[n]
+        (x,y,z) = pos[n]
         points.InsertPoint(n,x,y,z)
-        point_data.InsertNextTuple([pressure[n], cb[n], cc[n]])
+        point_data.InsertNextTuple([pressure[n], cb[n]])
     
     #Filling zeros at deleted nodes
     # try:
@@ -59,11 +47,15 @@ def save_VTK(sid, G, boundary_edges, diams, lens, flow, pressure, cb, cc, name):
     
     cell_data_d = vtk.vtkDoubleArray()
     cell_data_d.SetNumberOfComponents(1)
-    cell_data_d.SetName('d')
+    cell_data_d.SetName('b')
     
     cell_data_l = vtk.vtkDoubleArray()
     cell_data_l.SetNumberOfComponents(1)
     cell_data_l.SetName('l')
+
+    cell_data_fl = vtk.vtkDoubleArray()
+    cell_data_fl.SetNumberOfComponents(1)
+    cell_data_fl.SetName('fl')
 
     cell_data_q = vtk.vtkDoubleArray()
     cell_data_q.SetNumberOfComponents(1)
@@ -76,38 +68,29 @@ def save_VTK(sid, G, boundary_edges, diams, lens, flow, pressure, cb, cc, name):
     cell_data_cb_out = vtk.vtkDoubleArray()
     cell_data_cb_out.SetNumberOfComponents(1)
     cell_data_cb_out.SetName('cb_out')
-   
-    cell_data_cc_in = vtk.vtkDoubleArray()
-    cell_data_cc_in.SetNumberOfComponents(1)
-    cell_data_cc_in.SetName('cc in')
-   
-    cell_data_cc_out = vtk.vtkDoubleArray()
-    cell_data_cc_out.SetNumberOfComponents(1)
-    cell_data_cc_out.SetName('cc_out')
 
     tmp_u = []; tmp_v = [];
     for i, e in enumerate(G.edges()):
         u=e[0] 
         v=e[1]
-        if (u, v) not in boundary_edges and (v, u) not in boundary_edges:
-            lines.InsertNextCell(2)  
-            lines.InsertCellPoint(u) 
-            lines.InsertCellPoint(v)
-            cell_data_d.InsertNextTuple([diams[i] * sid.d0])
-            cell_data_l.InsertNextTuple([lens[i] * sid.l0])
-            cell_data_q.InsertNextTuple([flow[i]])
-            cell_data_cb_in.InsertNextTuple([cb[u]])
-            cell_data_cb_out.InsertNextTuple([cb[v]])
-            cell_data_cc_in.InsertNextTuple([cc[u]])
-            cell_data_cc_out.InsertNextTuple([cc[v]]) 
+        lines.InsertNextCell(2)  
+        lines.InsertCellPoint(u) 
+        lines.InsertCellPoint(v)
+        cell_data_d.InsertNextTuple([apertures[i] * sid.b0])
+        cell_data_l.InsertNextTuple([lens[i] * sid.l0])
+        cell_data_fl.InsertNextTuple([fracture_lens[i] * sid.l0])
+        cell_data_q.InsertNextTuple([flow[i]])
+        cell_data_cb_in.InsertNextTuple([cb[u]])
+        cell_data_cb_out.InsertNextTuple([cb[v]])
+
 
     edgeData.GetCellData().AddArray(cell_data_d)
     edgeData.GetCellData().AddArray(cell_data_l)
+    edgeData.GetCellData().AddArray(cell_data_fl)
     edgeData.GetCellData().AddArray(cell_data_q)
     edgeData.GetCellData().AddArray(cell_data_cb_in)
     edgeData.GetCellData().AddArray(cell_data_cb_out)
-    edgeData.GetCellData().AddArray(cell_data_cc_in)
-    edgeData.GetCellData().AddArray(cell_data_cc_out)
+
 
     edgeData.SetPoints(points) 
     edgeData.SetLines(lines)

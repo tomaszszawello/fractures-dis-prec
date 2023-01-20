@@ -3,7 +3,7 @@ import scipy.sparse as spr
 
 from config import simInputData
 
-def create_matrices(sid:simInputData, G, in_nodes, out_nodes, boundary_edges):
+def create_matrices(sid:simInputData, G, in_nodes, out_nodes):
     """ Creates incidence matrices for flow and concentration calculation.
 
     Parameters
@@ -49,28 +49,27 @@ def create_matrices(sid:simInputData, G, in_nodes, out_nodes, boundary_edges):
     """
     ne = len(G.edges())
     data, row, col = [], [], [] # data for standard incidence matrix (ne x nsq)
-    diams, fracture_lens, lens = [], [], [] # vectors of diameters and lengths
+    apertures, fracture_lens, lens = [], [], [] # vectors of diameters and lengths
     data_mid, row_mid, col_mid = [], [], [] # data for matrix keeping connections of only middle nodes (nsq x nsq)
     data_bound, row_bound, col_bound = [], [], [] # data for diagonal matrix for input and output (nsq x nsq)
     data_in, row_in, col_in = [], [], [] # data for matrix keeping connections of only input nodes
     reg_nodes = [] # list of regular nodes
     edge_list = []
-    boundary_edge_list = np.zeros(ne)
     in_edges = np.zeros(ne)
     out_edges = np.zeros(ne)
     for i, e in enumerate(G.edges()):
         n1, n2 = e
-        d = G[n1][n2]['d']
-        l = G[n1][n2]['l']
+        b = G[n1][n2]['b']
+        l = G[n1][n2]['length']
         data.append(-1)
         row.append(i)
         col.append(n1)
         data.append(1)
         row.append(i)
         col.append(n2)
-        diams.append(d)
+        apertures.append(b)
         lens.append(l)
-        fracture_lens.append(G.nodes[n1]['fl'] + G.nodes[n2]['fl'])
+        fracture_lens.append(G[n1][n2]['area'] / b)
         edge_list.append((n1, n2))
         if (n1 not in in_nodes and n1 not in out_nodes) and (n2 not in in_nodes and n2 not in out_nodes):
             data_mid.extend((1, 1))
@@ -101,8 +100,6 @@ def create_matrices(sid:simInputData, G, in_nodes, out_nodes, boundary_edges):
             in_edges[i] = 1
         elif (n1 not in out_nodes and n2 in out_nodes) or (n1 in out_nodes and n2 not in out_nodes):
             out_edges[i] = 1
-        if (n2, n1) in boundary_edges or (n1, n2) in boundary_edges:
-            boundary_edge_list[i] = 1
     for node in in_nodes + out_nodes:
         data_bound.append(1)
         row_bound.append(node)
@@ -112,9 +109,12 @@ def create_matrices(sid:simInputData, G, in_nodes, out_nodes, boundary_edges):
         data_mid.append(1)
         row_mid.append(node)
         col_mid.append(node)
+    apertures = np.array(apertures) / sid.b0
+    lens = np.array(lens) / sid.l0
+    fracture_lens = np.array(fracture_lens) / sid.l0
     return spr.csr_matrix((data, (row, col)), shape=(ne, sid.nsq)), \
         spr.csr_matrix((data_mid, (row_mid, col_mid)),shape=(sid.nsq, sid.nsq)), \
         spr.csr_matrix((data_bound, (row_bound, col_bound)), shape=(sid.nsq, sid.nsq)), \
         spr.csr_matrix((data_in, (row_in, col_in)), shape=(ne, sid.nsq)), \
-        np.array(diams), np.array(fracture_lens), np.array(lens), in_edges, out_edges, edge_list, boundary_edge_list
+        apertures, fracture_lens, lens, in_edges, out_edges, edge_list
         
