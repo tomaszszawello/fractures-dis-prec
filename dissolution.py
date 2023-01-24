@@ -68,7 +68,7 @@ def find_cb(sid, apertures, fracture_lens, lens, flow, inc_matrix, in_nodes, out
     qc = fracture_lens * flow * np.exp(-2 * sid.Da / (1 + sid.G * apertures) * lens / np.abs(flow)) # find vector with non-diagonal coefficients
     qc_matrix = np.abs(inc_matrix.transpose() @ spr.diags(qc) @ inc_matrix)
     cb_matrix = cb_inc.multiply(qc_matrix)
-    diag = -np.abs(inc_matrix.transpose()) @ (np.abs(flow) * fracture_lens) / 2 # find diagonal coefficients (inlet flow for each node)
+    diag = -np.abs(inc_matrix.transpose()) @ np.abs(flow * fracture_lens) / 2 # find diagonal coefficients (inlet flow for each node)
     for node in in_nodes:
         diag[node] = 1 # set diagonal for input nodes to 1
     for node in out_nodes:

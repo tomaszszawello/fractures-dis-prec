@@ -69,7 +69,7 @@ def plot_data(sid:simInputData):
     plt.savefig(sid.dirname + '/params.png')
     plt.close()
 
-def check_flow(flow, in_edges, out_edges):
+def check_flow(fracture_lens, flow, in_edges, out_edges):
     ''' Check flow conservation in the system (inflow and outflow)
 
     Parameters
@@ -87,8 +87,8 @@ def check_flow(flow, in_edges, out_edges):
     -------
     None
     '''
-    Q_in = np.sum(in_edges * np.abs(flow))
-    Q_out = np.sum(out_edges * np.abs(flow))
+    Q_in = np.sum(in_edges * np.abs(fracture_lens * flow))
+    Q_out = np.sum(out_edges * np.abs(fracture_lens * flow))
     print('Q_in =', Q_in, 'Q_out =', Q_out)
 
 def check_mass(sid, incidence, flow, cb, vols, in_edges, out_edges, dt, delta_b):

@@ -4,6 +4,27 @@ import numpy as np
 
 from config import simInputData
 
+def save_VTK_nodes(sid, G, in_nodes, out_nodes):
+    pos = list(zip(nx.get_node_attributes(G, 'x').values(), nx.get_node_attributes(G, 'y').values(), nx.get_node_attributes(G, 'z').values()))
+    writer = vtk.vtkXMLPolyDataWriter()
+    writer.SetFileName(sid.dirname + '/nodes.vtk')
+    data = vtk.vtkAppendPolyData()
+    for node in in_nodes:
+        sphere = vtk.vtkSphereSource()
+        sphere.SetCenter(pos[node][0], pos[node][1], pos[node][2])
+        sphere.SetRadius(1)
+        sphere.Update()
+        data.AddInputData(sphere.GetOutput())
+    for node in out_nodes:
+        sphere = vtk.vtkSphereSource()
+        sphere.SetCenter(pos[node][0], pos[node][1], pos[node][2])
+        sphere.SetRadius(1)
+        sphere.Update()
+        data.AddInputData(sphere.GetOutput())
+    data.Update()
+    writer.SetInputData(data.GetOutput())
+    writer.Update()   
+
 
 def save_VTK(sid, G, apertures, fracture_lens, lens, flow, pressure, cb, name): 
     """
@@ -14,11 +35,7 @@ def save_VTK(sid, G, apertures, fracture_lens, lens, flow, pressure, cb, name):
         3. Suffix (string) to save name of files
 
     """
-
-    np={} 
-
     pos = list(zip(nx.get_node_attributes(G, 'x').values(), nx.get_node_attributes(G, 'y').values(), nx.get_node_attributes(G, 'z').values()))
-
 
         # Generate the polyline for the spline. 
     points = vtk.vtkPoints() 
@@ -37,13 +54,6 @@ def save_VTK(sid, G, apertures, fracture_lens, lens, flow, pressure, cb, name):
         (x,y,z) = pos[n]
         points.InsertPoint(n,x,y,z)
         point_data.InsertNextTuple([pressure[n], cb[n]])
-    
-    #Filling zeros at deleted nodes
-    # try:
-    #     for i in self.isolated_nodes:
-    #         points.InsertPoint(int(i),0,0,0)
-    # except:
-    #     pass
     
     cell_data_d = vtk.vtkDoubleArray()
     cell_data_d.SetNumberOfComponents(1)
@@ -69,7 +79,7 @@ def save_VTK(sid, G, apertures, fracture_lens, lens, flow, pressure, cb, name):
     cell_data_cb_out.SetNumberOfComponents(1)
     cell_data_cb_out.SetName('cb_out')
 
-    tmp_u = []; tmp_v = [];
+
     for i, e in enumerate(G.edges()):
         u=e[0] 
         v=e[1]
