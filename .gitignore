@@ -3,6 +3,8 @@
 *.dill
 *.txt
 *.vtk
+*.zip
+*.json
 /.vscode/settings.json
 /out.prof
 /out.profile

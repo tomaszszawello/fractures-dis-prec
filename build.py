@@ -8,9 +8,9 @@ from config import simInputData
 
 
 def build(sid:simInputData):
-    G, in_nodes, out_nodes = load_my(sid)
+    G, G2, in_nodes, out_nodes = load_my(sid)
     sid.dirname += 'my'
     make_dir(sid)
     Sv.save_config(sid)
 
-    return G, in_nodes, out_nodes
+    return G, G2, in_nodes, out_nodes

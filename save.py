@@ -1,5 +1,9 @@
 import networkx as nx
 import dill
+import json
+
+from networkx.readwrite import json_graph
+
 from config import simInputData
                                                                             
 def save(name, sid:simInputData, G, in_nodes, out_nodes, boundary_edges):
@@ -43,3 +47,28 @@ def save_config(sid:simInputData):
     for key, val in sid.__class__.__dict__.items():
         f.write(f'{key} = {val} \r')
     f.close()
+
+def dump_json_graph(G, name):
+    """Write graph out in json format
+ 
+    Parameters
+    ---------- 
+        self : object 
+            DFN Class
+        G :networkX graph
+            NetworkX Graph based on the DFN
+        name : string
+             Name of output file (no .json)
+
+    Returns
+    -------
+
+    Notes
+    -----
+
+"""
+    print("--> Dumping Graph into file: " + name + ".json")
+    jsondata = json_graph.node_link_data(G)
+    with open(name + '.json', 'w') as fp:
+        json.dump(jsondata, fp)
+    print("--> Complete")
