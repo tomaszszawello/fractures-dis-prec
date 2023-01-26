@@ -48,7 +48,7 @@ def save_config(sid:simInputData):
         f.write(f'{key} = {val} \r')
     f.close()
 
-def dump_json_graph(G, name):
+def dump_json_graph(sid, G, name):
     """Write graph out in json format
  
     Parameters
@@ -69,6 +69,6 @@ def dump_json_graph(G, name):
 """
     print("--> Dumping Graph into file: " + name + ".json")
     jsondata = json_graph.node_link_data(G)
-    with open(name + '.json', 'w') as fp:
+    with open(sid.dirname + '/' + name + '.json', 'w') as fp:
         json.dump(jsondata, fp)
     print("--> Complete")

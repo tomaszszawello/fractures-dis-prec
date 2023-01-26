@@ -92,4 +92,5 @@ def update_network(G, edge_list, apertures, flow):
 
 def update_initial_network(G, edge_list, apertures):
     nx.set_edge_attributes(G, dict(zip(edge_list, apertures)), 'b')
+    nx.set_edge_attributes(G, dict(zip(edge_list, apertures ** 2 / 12)), 'perm')
     return G
