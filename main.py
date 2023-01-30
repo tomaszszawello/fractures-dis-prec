@@ -45,4 +45,4 @@ if i != 1:
     save_VTK(sid, G, apertures, fracture_lens, lens, np.abs(flow), pressure, cb, name=f'network_{sid.old_iters:04d}.vtk')
     save_VTK_nodes(sid, G, in_nodes, out_nodes)
     Da.plot_data(sid)
-    Dr.uniform_hist(simInputData, G, in_nodes, out_nodes, apertures, flow, cb, name='d.png', data='d')
+    #Dr.uniform_hist(sid, G, in_nodes, out_nodes, apertures, flow, cb, name='d.png', data='d')
