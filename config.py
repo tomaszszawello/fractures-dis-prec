@@ -4,14 +4,14 @@ import numpy as np
 
 class simInputData:
     n = 20 # rozmiar siatki
-    iters = 5000 # liczba iteracji
-    tmax = 100000
-    plot_every = 100
+    iters = 50000 # liczba iteracji
+    tmax = 100
+    plot_every = 20
     #save_every = 100
 
     figsize = 10
 
-    Da_eff = 5
+    Da_eff = 1
     G = 1
 
     Da = Da_eff * (1 + G)
@@ -38,14 +38,14 @@ class simInputData:
     growth_rate = 0.05 # maksymalny procent średnicy o jaki może urosnąć krawędź
     dt_max = 5
 
-    breakthrough = True
+    breakthrough = False
     b_break = 4
 
     qdrawconst = 15
     ddrawconst = 0.5
 
     #load = 4 # 0 - dane z config, 1 - wczytanie danych z ewoluowanej sieci (plik save), 2 - wczytanie templatki (plik template)
-    load_name = 'tpl_x1'
+    load_name = 'carbonate_x1'
     #vtk_name = 'network_100x100.vtk'
 
     #geo = "cylindrical"

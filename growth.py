@@ -56,7 +56,7 @@ def update_apertures(sid, flow, cb, apertures, lens, inc_matrix, out_edges, dt):
     else:
         dt = sid.dt
     apertures += dt * aperture_change
-    if np.max(out_edges * apertures) > sid.b_break:
+    if np.max(out_edges * apertures) > sid.b_break and sid.breakthrough:
         breakthrough = True
         print ('Network dissolved.')
     return apertures, dt, breakthrough
