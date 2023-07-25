@@ -1,66 +1,175 @@
+""" Build classes for incidence and edge data and initialize them.
+
+This module contains classes and functions converting network data to sparse
+incidence matrices and vectors used for faster calculation.
+
+Notable classes
+-------
+Incidence
+    container for incidence matrices
+
+Edges
+    container for information on network edges
+
+Notable functions
+-------
+create_matrices(SimInputData, Graph, Incidence) -> Edges
+    initialize matrices and edge data in Incidence and Edges classes
+"""
+
 import numpy as np
 import scipy.sparse as spr
 
-from config import simInputData
+from config import SimInputData
+from network import Graph
 
-def create_matrices(sid:simInputData, G, in_nodes, out_nodes):
-    """ Creates incidence matrices for flow and concentration calculation.
+
+class Incidence():
+    """ Contains all necessary incidence matrices.
+
+    This class is a container for all incidence matrices i.e. sparse matrices
+    with non-zero indices for connections between edges and certain nodes.
+
+    Attributes
+    -------
+    incidence : scipy sparse csr matrix (ne x nsq)
+        connections of all edges with all nodes
+
+    middle : scipy sparse csr matrix (nsq x nsq)
+        connections between all nodes but inlet and outlet
+
+    boundary : scipy sparse csr matrix (nsq x nsq)
+        identity matrix for inlet and outlet nodes, zero elsewhere
+
+    inlet : scipy sparse csr matrix (ne x nsq)
+        connections of edges with inlet nodes
+    """
+    incidence: spr.csr_matrix = spr.csr_matrix(0)
+    "connections of all edges with all nodes (ne x nsq)"
+    middle: spr.csr_matrix = spr.csr_matrix(0)
+    "connections between all nodes but inlet and outlet (nsq x nsq)"
+    boundary: spr.csr_matrix = spr.csr_matrix(0)
+    "identity matrix for inlet and outlet nodes, zero elsewhere (nsq x nsq)"
+    inlet: spr.csr_matrix = spr.csr_matrix(0)
+    "connections of edges with inlet nodes (ne x nsq)"
+
+class Edges():
+    """ Contains all data connected with network edges.
+
+    This class is a container for all information about network edges and their
+    type in the network graph.
+
+    Attributes
+    -------
+    diams : numpy ndarray
+        diameters of edges
+
+    lens : numpy ndarray
+        lengths of edges
+
+    flow : numpy ndarray
+        flow in edges
+
+    inlet : numpy ndarray
+        edges connected to inlet (vector with ones for inlet edge indices and
+        zero otherwise)
+
+    outlet : numpy ndarray
+        edges connected to outlet (vector with ones for outlet edge indices and
+        zero otherwise)
+
+    edge_list : numpy ndarray
+        array of tuples (n1, n2) with n1, n2 being nodes connected by edge with
+        a given index
+
+    boundary_list : numpy ndarray
+        edges connecting the boundaries (assuring PBC; vector with ones for
+        boundary edge indices and zero otherwise); we need them to disinclude
+        them for drawing, to make the draw legible
+
+    diams_initial : numpy ndarray
+        initial diameters of edges; used for checking how much precipitation
+        happened in each part of graph
+    """
+    apertures: np.ndarray
+    "diameters of edges"
+    fracture_lens: np.ndarray
+    "fracture lengths of edges"
+    lens: np.ndarray
+    "lengths of edges"
+    flow: np.ndarray
+    "flow in edges"
+    inlet: np.ndarray
+    ("edges connected to inlet (vector with ones for inlet edge indices and \
+     zero otherwise)")
+    outlet: np.ndarray
+    ("edges connected to outlet (vector with ones for outlet edge indices and \
+     zero otherwise)")
+    edge_list: np.ndarray
+    ("array of tuples (n1, n2) with n1, n2 being nodes connected by edge with \
+     a given index")
+    def __init__(self, apertures, fracture_lens, lens, flow, in_edges, out_edges, \
+        edge_list):
+        self.apertures = apertures
+        self.fracture_lens = fracture_lens
+        self.lens = lens
+        self.flow = flow
+        self.inlet = in_edges
+        self.outlet = out_edges
+        self.edge_list = edge_list
+
+def create_matrices(sid: SimInputData, graph: Graph, inc: Incidence) -> Edges:
+    """ Create incidence matrices and edges class for graph parameters.
+
+    This function takes the network and based on its properties creates
+    matrices of connections for different types of nodes and edges.
+    It later updates the matrices in Incidence class and returns Edges class
+    for easy access to the parameters of edges in the network.
 
     Parameters
     -------
-    sid : simInputData class object
-        all config parameters of the simulation, here we use attributes:
+    sid : SimInputData class object
+        all config parameters of the simulation
+        ne - number of edges
         nsq - number of nodes in the network squared
 
-    edges : list
-        list of all edges in the network, containing:
-        n1 - start node
-        n2 - end node
-        d - diameter
-        l - length
-        t - type (0 - regular, 1 - regular to input, 2 - regular to output)
+    inc : Incidence class object
+        matrices of incidence
+        incidence - connections of all edges with all nodes
+        middle - connections between all nodes but inlet and outlet
+        boundary - identity matrix for inlet and outlet nodes, zero elsewhere
+        inlet - connections of edges with inlet nodes
 
-    in_nodes : list
-        list of input nodes
-    
-    out_nodes : list
-        list of output nodes
+    graph : Graph class object
+        network and all its properties
+        in_nodes - inlet nodes
+        out_nodes - outlet nodes
+        boundary_edges - edges assuring PBC
 
     Returns
     -------
-    sparse csr matrix
-        matrix of incidence (ne x nsq)
-    
-    sparse csr matrix
-        matrix of middle nodes (nsq x nsq)
-    
-    sparse csr matrix
-        diagonal matrix of input and output nodes (nsq x nsq)
-    
-    sparse csr matrix
-        matrix of connections for inlet edges (ne x nsq)
-
-    diams : list
-        vector of edge diameters
-    
-    lens : list
-        vector of edge lengths
-
+    edges : Edges class object
+        all edges in network and their parameters
     """
-    ne = len(G.edges())
-    data, row, col = [], [], [] # data for standard incidence matrix (ne x nsq)
-    apertures, fracture_lens, lens = [], [], [] # vectors of diameters and lengths
-    data_mid, row_mid, col_mid = [], [], [] # data for matrix keeping connections of only middle nodes (nsq x nsq)
-    data_bound, row_bound, col_bound = [], [], [] # data for diagonal matrix for input and output (nsq x nsq)
-    data_in, row_in, col_in = [], [], [] # data for matrix keeping connections of only input nodes
-    reg_nodes = [] # list of regular nodes
-    edge_list = []
-    in_edges = np.zeros(ne)
-    out_edges = np.zeros(ne)
-    for i, e in enumerate(G.edges()):
+    sid.ne = len(graph.edges())
+    # data for standard incidence matrix (ne x nsq)
+    data, row, col = [], [], []
+    # vectors of edges parameters (ne)
+    apertures, fracture_lens, lens, flow, edge_list = [], [], [], [], []
+    # data for matrix keeping connections of only middle nodes (nsq x nsq)
+    data_mid, row_mid, col_mid = [], [], []
+    # data for diagonal matrix for input and output (nsq x nsq)
+    data_bound, row_bound, col_bound = [], [], []
+    # data for matrix keeping connections of only input nodes (ne x nsq)
+    data_in, row_in, col_in = [], [], []
+    reg_nodes = [] # list of regular nodes (not inlet or outlet)
+    in_edges = np.zeros(sid.ne)
+    out_edges = np.zeros(sid.ne)
+    for i, e in enumerate(graph.edges()):
         n1, n2 = e
-        b = G[n1][n2]['b']
-        l = G[n1][n2]['length']
+        b = graph[n1][n2]['b']
+        l = graph[n1][n2]['length']
+        q = graph[n1][n2]['q']
         data.append(-1)
         row.append(i)
         col.append(n1)
@@ -69,14 +178,22 @@ def create_matrices(sid:simInputData, G, in_nodes, out_nodes):
         col.append(n2)
         apertures.append(b)
         lens.append(l)
-        fracture_lens.append(G[n1][n2]['area'] / b)
+        flow.append(q)
+        fracture_lens.append(graph[n1][n2]['area'] / b)
         edge_list.append((n1, n2))
-        if (n1 not in in_nodes and n1 not in out_nodes) and (n2 not in in_nodes and n2 not in out_nodes):
+        # middle matrix has 1 in coordinates of all connected regular nodes
+        # so it can be later multiplied elementwise by any other matrix for
+        # which we want to set specific boundary condition for inlet and outlet
+        if (n1 not in graph.in_nodes and n1 not in graph.out_nodes) \
+            and (n2 not in graph.in_nodes and n2 not in graph.out_nodes):
             data_mid.extend((1, 1))
             row_mid.extend((n1, n2))
             col_mid.extend((n2, n1))
             reg_nodes.extend((n1, n2))
-        elif n1 not in in_nodes and n2 in in_nodes:
+        # in middle matrix we include also connection to the inlet node, but
+        # only from "one side" (rows for inlet nodes must be all equal 0)
+        # in inlet matrix, we include full incidence for inlet nodes and edges
+        elif n1 not in graph.in_nodes and n2 in graph.in_nodes:
             data_mid.append(1)
             row_mid.append(n1)
             col_mid.append(n2)
@@ -87,7 +204,7 @@ def create_matrices(sid:simInputData, G, in_nodes, out_nodes):
             row_in.append(i)
             col_in.append(n2)
             in_edges[i] = 1
-        elif n1 in in_nodes and n2 not in in_nodes:
+        elif n1 in graph.in_nodes and n2 not in graph.in_nodes:
             data_mid.append(1)
             row_mid.append(n2)
             col_mid.append(n1)
@@ -98,23 +215,36 @@ def create_matrices(sid:simInputData, G, in_nodes, out_nodes):
             row_in.append(i)
             col_in.append(n1)
             in_edges[i] = 1
-        elif (n1 not in out_nodes and n2 in out_nodes) or (n1 in out_nodes and n2 not in out_nodes):
+        elif (n1 not in graph.out_nodes and n2 in graph.out_nodes) \
+            or (n1 in graph.out_nodes and n2 not in graph.out_nodes):
             out_edges[i] = 1
-    for node in in_nodes + out_nodes:
+    # in boundary matrix, we set identity to rows corresponding to inlet and
+    # outlet nodes
+    for node in graph.in_nodes + graph.out_nodes:
         data_bound.append(1)
         row_bound.append(node)
         col_bound.append(node)
     reg_nodes = list(set(reg_nodes))
+    # in middle matrix, we also include 1 on diagonal for regular nodes, so the
+    # diagonal of a given matrix is not zeroed when multiplied elementwise
     for node in reg_nodes:
         data_mid.append(1)
         row_mid.append(node)
         col_mid.append(node)
+    # make edge parameters dimensionless
     apertures = np.array(apertures) / sid.b0
     lens = np.array(lens) / sid.l0
     fracture_lens = np.array(fracture_lens) / sid.l0
-    return spr.csr_matrix((data, (row, col)), shape=(ne, sid.nsq)), \
-        spr.csr_matrix((data_mid, (row_mid, col_mid)),shape=(sid.nsq, sid.nsq)), \
-        spr.csr_matrix((data_bound, (row_bound, col_bound)), shape=(sid.nsq, sid.nsq)), \
-        spr.csr_matrix((data_in, (row_in, col_in)), shape=(ne, sid.nsq)), \
-        apertures, fracture_lens, lens, in_edges, out_edges, edge_list
-        
+    inc.incidence = spr.csr_matrix((data, (row, col)), shape=(sid.ne, sid.nsq))
+    inc.middle = spr.csr_matrix((data_mid, (row_mid, col_mid)), \
+        shape = (sid.nsq, sid.nsq))
+    inc.boundary = spr.csr_matrix((data_bound, (row_bound, col_bound)), \
+        shape = (sid.nsq, sid.nsq))
+    inc.inlet = spr.csr_matrix((data_in, (row_in, col_in)), \
+        shape = (sid.ne, sid.nsq))
+    apertures, fracture_lens, lens, flow = np.array(apertures), \
+        np.array(fracture_lens), np.array(lens), np.array(flow)
+    edges = Edges(apertures, fracture_lens, lens, flow, in_edges, out_edges, \
+        edge_list)
+    return edges
+    

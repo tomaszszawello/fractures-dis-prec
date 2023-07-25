@@ -4,7 +4,7 @@ import scipy.sparse as spr
 
 from collections import defaultdict
 
-from config import simInputData
+from config import SimInputData
 
 def find_triangles(G):
     ''' Find triangles in the network (cells consisting of 3 nodes and 3 edges).
@@ -42,7 +42,7 @@ def find_triangles(G):
 
     return spr.csr_matrix((triangles_inc_data, (triangles_inc_row, triangles_inc_col)), shape=(ne, nt)), triangles_pos
 
-def create_vector(sid:simInputData, triangle_pos):
+def create_vector(sid:SimInputData, triangle_pos):
     ''' Create vector with initial volumes of A.
     '''
     return sid.vol_a_in * np.ones(len(triangle_pos))

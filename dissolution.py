@@ -1,11 +1,28 @@
+""" Calculate substance B concentration (dissolution).
+
+This module contains functions for solving the advection-reaction equation for
+substance B concentration. It constructs a result vector for the matrix
+equation (constant throughout the simulation) and the matrix with coefficients
+corresponding to aforementioned equation. Function solve_equation from module
+utils is used to solve the equation for B concentration.
+
+Notable functions
+-------
+solve_dissolution(SimInputData, Incidence, Graph, Edges, spr.csc_matrix) \
+    -> np.ndarray
+    calculate substance B concentration
+"""
+
 import numpy as np
 import scipy.sparse as spr
 
-from config import simInputData
+from config import SimInputData
+from incidence import Edges, Incidence
+from network import Graph
 from utils import solve_equation
 
 
-def create_vector(sid:simInputData, in_nodes):
+def create_vector(sid:SimInputData, graph: Graph):
     """ Creates vector result for B concentration calculation.
     
     For inlet nodes elements of the vector correspond explicitly
@@ -14,7 +31,7 @@ def create_vector(sid:simInputData, in_nodes):
 
     Parameters
     -------
-    sid : simInputData class object
+    sid : SimInputData class object
         all config parameters of the simulation, here we use attributes:
         nsq - number of nodes in the network squared
         cb_in - B concentration in inlet nodes
@@ -28,52 +45,72 @@ def create_vector(sid:simInputData, in_nodes):
         result vector for B concentration calculation
     """
     data, row, col = [], [], []
-    for node in in_nodes:
+    for node in graph.in_nodes:
         data.append(sid.cb_in)
         row.append(node)
         col.append(0)
     return spr.csc_matrix((data, (row, col)), shape=(sid.nsq, 1))
 
-def find_cb(sid, apertures, fracture_lens, lens, flow, inc_matrix, in_nodes, out_nodes, cb_b):
-    """ Calculates B concentration.
+def solve_dissolution(sid: SimInputData, inc: Incidence, graph: Graph, \
+    edges: Edges, cb_b: spr.csc_matrix) -> np.ndarray:
+    """ Calculate B concentration.
+
+    This function solves the advection-reaction equation for substance B
+    concentration. We assume substance A is always available.
 
     Parameters
     -------
     sid : simInputData class object
-        all config parameters of the simulation, here we use attributes:
-        Da - Damkohler number
-        G - diffusion-reaction relation coefficient
+        all config parameters of the simulation
+        Da : float
+        G : float
 
-    diams : numpy array
-        current diameters of edges
-    lens : numpy array
-        lengths of edges
-    flow : numpy array
-        vector of flows
-    inc_matrix : scipy sparse array
-        incidence matrix
-    in_nodes : list
-        list of inlet nodes
-    out_nodes : list
-        list of outlet nodes
-    cb_b : scipy sparse vector
-        result vector for concentration calculation
-    
+    inc : Incidence class object
+        matrices of incidence
+        incidence : scipy sparse csr matrix (ne x nsq)
+
+    graph : Graph class object
+        network and all its properties
+        in_nodes : list
+        out_nodes : list
+
+    edges : Edges class object
+        all edges in network and their parameters
+        diams : numpy ndarray (ne)
+        lens : numpy ndarray (ne)
+        flow : numpy ndarray (ne)
+
+    cb_b : scipy sparse csc matrix (nsq x 1)
+        result vector for substance B concentration calculation
+
     Returns
     -------
-    cb : numpy array
-        vector of B concentration in nodes
+    cb : numpy array (nsq)
+        vector
     """
-    cb_inc = np.abs(inc_matrix.transpose() @ (spr.diags(flow) @ inc_matrix > 0)) # find incidence for cb (only upstream flow matters)
-    qc = fracture_lens * flow * np.exp(-2 * sid.Da / (1 + sid.G * apertures) * lens / np.abs(flow)) # find vector with non-diagonal coefficients
-    qc_matrix = np.abs(inc_matrix.transpose() @ spr.diags(qc) @ inc_matrix)
+    # find incidence for cb (only upstream flow matters)
+    cb_inc = np.abs(inc.incidence.T @ (spr.diags(edges.flow) \
+        @ inc.incidence > 0))
+    # find vector with non-diagonal coefficients
+    qc = edges.fracture_lens * edges.flow * np.exp(-np.abs(2 * sid.Da \
+        / (1 + sid.G * edges.apertures) * edges.lens / edges.flow))
+    qc_matrix = np.abs(inc.incidence.T @ spr.diags(qc) @ inc.incidence)
     cb_matrix = cb_inc.multiply(qc_matrix)
-    diag = -np.abs(inc_matrix.transpose()) @ np.abs(flow * fracture_lens) / 2 # find diagonal coefficients (inlet flow for each node)
-    for node in in_nodes:
-        diag[node] = 1 # set diagonal for input nodes to 1
-    for node in out_nodes:
-        diag[node] *= 2 # multiply diagonal for output nodes (they have no outlet, so inlet flow is equal to whole flow)
-    diag = diag * (diag != 0) + 1 * (diag == 0) # fix for nodes with 0 flow - without it we get a singular matrix
-    cb_matrix.setdiag(diag) # replace diagonal
+    # find diagonal coefficients (inlet flow for each node)
+    diag = -np.abs(inc.incidence.T) @ np.abs(edges.flow * edges.fracture_lens) \
+        / 2
+    # set diagonal for input nodes to 1
+    for node in graph.in_nodes:
+        diag[node] = 1
+    # multiply diagonal for output nodes (they have no outlet, so inlet flow
+    # is equal to whole flow); also fix for nodes which are connected only to
+    # other out_nodes - without it we get a singular matrix (whole row of
+    # zeros)
+    for node in graph.out_nodes:
+        diag[node] *= 2
+    # fix for nodes with 0 flow - without it we get a singular matrix
+    diag = diag * (diag != 0) + 1 * (diag == 0)
+    # replace diagonal
+    cb_matrix.setdiag(diag)
     cb = solve_equation(cb_matrix, cb_b)
     return cb

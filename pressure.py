@@ -1,12 +1,29 @@
-import networkx as nx
+""" Calculate pressure and flow in the system.
+
+This module contains functions for solving the Hagen-Poiseuille and continuity
+equations for pressure and flow. It assumes constant inflow boundary condition.
+It constructs a result vector for the matrix equation (constant throughout the
+simulation) and the matrix with coefficients corresponding to aforementioned
+equation. Function solve_equation from module utils is used to solve the
+equations for flow.
+
+Notable functions
+-------
+solve_flow(SimInputData, Incidence, Graph, Edges, spr.csc_matrix) \
+    -> np.ndarray
+    calculate pressure and update flow in network edges
+"""
+
 import numpy as np
 import scipy.sparse as spr
 
-from config import simInputData
+from config import SimInputData
+from incidence import Edges, Incidence
+from network import Graph
 from utils import solve_equation
 
 
-def create_vector(sid:simInputData, in_nodes):
+def create_vector(sid:SimInputData, graph: Graph):
     """ Creates vector result for pressure calculation.
     
     For inlet and outlet nodes elements of the vector correspond explicitly
@@ -15,7 +32,7 @@ def create_vector(sid:simInputData, in_nodes):
 
     Parameters
     -------
-    sid : simInputData class object
+    sid : SimInputData class object
         all config parameters of the simulation, here we use attributes:
         nsq - number of nodes in the network squared
 
@@ -28,69 +45,61 @@ def create_vector(sid:simInputData, in_nodes):
         result vector for pressure calculation
     """
     data, row, col = [], [], []
-    for node in in_nodes:
+    for node in graph.in_nodes:
         data.append(1)
         row.append(node)
         col.append(0)
     return spr.csc_matrix((data, (row, col)), shape=(sid.nsq, 1))
 
-def find_flow(sid, apertures, fracture_lens, lens, inc_matrix, mid_matrix, bound_matrix, in_matrix, pressure_b, in_edges):
+def solve_flow(sid: SimInputData, inc: Incidence, graph: Graph, edges: Edges, \
+    pressure_b: spr.csc_matrix) -> np.ndarray:
     """ Calculates pressure and flow.
 
     Parameters
     -------
-    sid : simInputData class object
-        all config parameters of the simulation, here we use attributes:
+    sid : SimInputData class object
+        all config parameters of the simulation
         qin - characteristic flow for inlet edge
 
-    diams : numpy array
-        current diameters of edges
+    inc : Incidence class object
+        matrices of incidence; here all of shape (ne x nsq)
+        incidence - incidence of all nodes and edges
+        middle - incidence of nodes and edges for all but inlet and outlet
+        boundary - incidence of nodes and edges for inlet and outlet
+        inlet - incidence of nodes and edges for inlet
 
-    lens : numpy array
-        lengths of edges
+    graph : Graph class object
+        network and all its properties
+        in_nodes - inlet nodes
 
-    inc_matrix : scipy sparse array
-        incidence matrix
-
-    mid_matrix : scipy sparse array
-        matrix zeroing rows for input and output nodes
-
-    bound_matrix : scipy sparse array
-        diagonal matrix with ones for input and output nodes
-
-    in_matrix : scipy sparse array
-        incidence matrix for inlet edges
+    edges : Edges class object
+        all edges in network and their parameters
+        diams - diameters
+        lens - lengths
 
     pressure_b : scipy sparse vector
         result vector for pressure equation
 
-    in_nodes : list
-        list of inlet nodes
-
-
     Returns
     -------
-    pressure : numpy array
+    pressure : numpy ndarray
         vector of pressure in nodes
-
-    flow : numpy array
-        vector of flows in edges
     """
-    p_matrix = inc_matrix.transpose() @ spr.diags(fracture_lens * apertures ** 3 / lens) @ inc_matrix # create matrix
-    p_matrix = p_matrix.multiply(mid_matrix) + bound_matrix
+    # create matrix (nsq x nsq) for solving equations for pressure and flow
+    # to find pressure in each node
+    p_matrix = inc.incidence.T @ spr.diags(edges.fracture_lens \
+        * edges.apertures ** 3 / edges.lens) @ inc.incidence
+    # for all inlet nodes we set the same pressure, for outlet nodes we set
+    # zero pressure; so for boundary nodes we zero the elements of p_matrix
+    # and add identity for those rows
+    p_matrix = p_matrix.multiply(inc.middle) + inc.boundary
+    # solve matrix @ pressure = pressure_b
     pressure = solve_equation(p_matrix, pressure_b)
-    q_in = np.abs(np.sum(fracture_lens * apertures ** 3 / lens * (in_matrix @ pressure))) # calculate inlet flow
-    pressure *= sid.qin * np.sum(in_edges) / q_in # normalize pressure to match condition for constant inlet flow
-    flow = apertures ** 3 / lens * (inc_matrix @ pressure)
-    return pressure, flow
-
-
-def update_network(G, edge_list, apertures, flow):
-    nx.set_edge_attributes(G, dict(zip(edge_list, apertures)), 'b')
-    nx.set_edge_attributes(G, dict(zip(edge_list, flow)), 'q')
-    return G
-
-def update_initial_network(G, edge_list, apertures):
-    nx.set_edge_attributes(G, dict(zip(edge_list, apertures)), 'b')
-    nx.set_edge_attributes(G, dict(zip(edge_list, apertures ** 2 / 12)), 'perm')
-    return G
+    # normalize pressure in inlet nodes to match condition for constant inlet
+    # flow
+    q_in = np.abs(np.sum(edges.fracture_lens * edges.apertures ** 3 \
+        / edges.lens * (inc.inlet @ pressure)))
+    pressure *= sid.q_in * np.sum(edges.inlet) / q_in
+    # update flow
+    edges.flow = edges.apertures ** 3 / edges.lens * (inc.incidence @ pressure)
+    return pressure

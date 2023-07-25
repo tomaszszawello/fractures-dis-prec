@@ -4,9 +4,9 @@ import json
 
 from networkx.readwrite import json_graph
 
-from config import simInputData
+from config import SimInputData
                                                                             
-def save(name, sid:simInputData, G, in_nodes, out_nodes, boundary_edges):
+def save(name, sid:SimInputData, G, in_nodes, out_nodes, boundary_edges):
     pos = nx.get_node_attributes(G,'pos')
     All = [sid, [], in_nodes, out_nodes, boundary_edges, pos]
 
@@ -42,7 +42,7 @@ def load(name):
     return  sid, G1, in_nodes, out_nodes, boundary_edges
 
 
-def save_config(sid:simInputData):
+def save_config(sid:SimInputData):
     f = open(sid.dirname+'/config.txt', 'w')
     for key, val in sid.__class__.__dict__.items():
         f.write(f'{key} = {val} \r')

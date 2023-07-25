@@ -1,7 +1,7 @@
 import numpy as np
 import scipy.sparse as spr
 
-from config import simInputData
+from config import SimInputData
 from utils import solve_equation
 
 
@@ -10,7 +10,7 @@ def create_vector(sid, diams, fracture_lens, lens, flow, inc_matrix, in_nodes, c
 
     Parameters
     -------
-    sid : simInputData class object
+    sid : SimInputData class object
         all config parameters of the simulation, here we use attributes:
         Da - Damkohler number
         G - diffusion-reaction relation coefficient
@@ -60,7 +60,7 @@ def find_cc(sid, diams, fracture_lens, lens, flow, inc_matrix, in_nodes, out_nod
 
     Parameters
     -------
-    sid : simInputData class object
+    sid : SimInputData class object
         all config parameters of the simulation, here we use attributes:
         Da - Damkohler number
         G - diffusion-reaction relation coefficient

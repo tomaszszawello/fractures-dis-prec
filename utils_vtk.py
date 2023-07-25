@@ -2,7 +2,7 @@ import networkx as nx
 import vtk
 import numpy as np
 
-from config import simInputData
+from config import SimInputData
 
 def save_VTK_nodes(sid, G, in_nodes, out_nodes):
     pos = list(zip(nx.get_node_attributes(G, 'x').values(), nx.get_node_attributes(G, 'y').values(), nx.get_node_attributes(G, 'z').values()))
@@ -165,7 +165,7 @@ def load_VTK(file_name):
     return scalars
 
 
-def build_VTK(sid:simInputData):
+def build_VTK(sid:SimInputData):
 
     scalars = load_VTK(sid.vtk_name)
 

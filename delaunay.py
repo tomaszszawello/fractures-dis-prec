@@ -1,3 +1,8 @@
+""" DEPRECATED - for now only loading network from json works
+"""
+
+
+
 import networkx as nx
 import numpy as np
 import scipy.spatial

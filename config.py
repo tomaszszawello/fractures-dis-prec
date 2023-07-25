@@ -1,71 +1,88 @@
-import numpy as np
+""" Initial parameters of the simulation.
 
-# zmienić wzory na ciśnienie na d^2, przecałkować wzory na koncentracje przy rozpuszczaniu, zastanowić się, jakie to ma znaczenia dla osadzania, rozważyć wizualizację
-
-class simInputData:
-    n = 20 # rozmiar siatki
-    iters = 50000 # liczba iteracji
-    tmax = 100
-    plot_every = 20
-    #save_every = 100
-
-    figsize = 10
-
-    Da_eff = 1
-    G = 1
-
-    Da = Da_eff * (1 + G)
+This module contains all parameters set before the simulation. Class
+SimInputData is used in nearly all functions. Most of the parameters (apart
+from VARIOUS section) are set by the user before starting the simulation.
+Most notable parameters are: iters/tmax - simulation length, Da_eff, G - 
+dissolution parameters.
+"""
 
 
-    b0 = 0.100861
-    l0 = 1
+# check if pressure & dissolution formulas are correct
 
-    qin = 1 # przepływ na wejściu
-    pout = 0  # jednostki? ciśnienie na wyjściu
-    l = 1  # początkowa długosć krawędzi
+class SimInputData:
+    """ Configuration class for the whole simulation.
+    """
+    # GENERAL
+    iters: int = 10000
+    "maximum number of iterations"
+    tmax: float = 500.
+    "maximum time"
+    plot_every: int = 50
+    "frequency (in iterations) of plotting the results"
+    collect_every: int = 10
+    "frequency (in iterations) of collecting data"
+    load_name: str = 'carbonate_x1'
+    "name of loaded network"
 
-    cb_in = 1 # mol / dm^3
+    # DISSOLUTION & PRECIPITATION
+    Da_eff: float = 0.1
+    "effective Damkohler number"
+    G: float = 1.
+    "diffusion to reaction ratio"
+    Da: float = Da_eff * (1 + G)
+    "Damkohler number"
 
+    # INCLUDE
+    include_adt: bool = True
+    "include adaptive timestep"
+    include_breakthrough: bool = False
+    "stop simulation when network is dissolved"
 
-    #alpha = 4 # liczba Sherwooda
-    #D = 3e-3 # mm^2/s stała dyfuzji HCl
-    #k = 1 # mm/s stała reakcji CaC03 + HCl
-    #gamma = 60 # mol/dm^3
+    # INITIAL CONDITIONS
+    q_in: float = 1.
+    "characteristic flow for inlet edge"
+    cb_in: float = 1.
+    "inlet B concentration"
+    b_break: float = 4.
+    "minimal aperture of outlet fracture for network to be dissolved"
 
+    # TIME
+    dt: float = 0.01
+    "initial timestep (if no adaptive timestep, timestep for whole simulation)"
+    growth_rate: float = 0.05
+    ("maximum percentage growth of an edges (used for finding adaptive \
+     timestep)")
+    dt_max: float = 5.
+    "maximum timestep (for adaptive)"
 
-    adaptive_dt = True
-    dt = 0.01
-    growth_rate = 0.05 # maksymalny procent średnicy o jaki może urosnąć krawędź
-    dt_max = 5
+    # PARTICLE TRACKING
+    track_every = 50
+    n_part = 10000
+    normalize_channeling = True
 
-    breakthrough = False
-    b_break = 4
+    # DRAWING - not sure if necessary
+    figsize: float = 10.
+    "figure size"
+    qdrawconst: float = 15.
+    "constant for improving flow drawing"
+    ddrawconst: float = 0.5
+    "constant for improving diameter drawing"
 
-    qdrawconst = 15
-    ddrawconst = 0.5
-
-    #load = 4 # 0 - dane z config, 1 - wczytanie danych z ewoluowanej sieci (plik save), 2 - wczytanie templatki (plik template)
-    load_name = 'carbonate_x1'
-    #vtk_name = 'network_100x100.vtk'
-
-    #geo = "cylindrical"
-    #geo = "donut"
-    #geo = "own"
-    #geo = "top"
-    #geo = "own"
-
-    #periodic = 'none' #none, top, side, all
-
-    #nodes_own = [[35, 35]]
-    #nodes_own = [[40, 40], [60, 60], [60, 40], [40, 60], [50, 64], [50, 36], [36, 50], [64, 50]]
-    #in_nodes_own, out_nodes_own = np.array([[25, 50]]) / 100 * n, np.array([[75, 50]]) / 100 * n
-    #in_nodes_own, out_nodes_own = np.array([[0, 50]]) / 100 * n, np.array([[100, 50]]) / 100 * n
-    #in_nodes_own, out_nodes_own = np.array([[40, 40], [60, 60], [60, 40], [40, 60]]) / 100 * n, np.array([[50, 64], [50, 36], [36, 50], [64, 50]]) / 100 * n #lista pozycji nodów in i out
-    #in_nodes_own, out_nodes_own = np.array([[0, 50], [15, 85], [50, 100], [85, 85], [100, 50], [85, 15], [50, 0], [15, 15]]) / 100 * n, np.array([[5, 70], [30, 95], [70, 95], [95, 70], [95, 30], [70, 5], [30, 5], [5, 30]]) / 100 * n
-    #in_nodes_own, out_nodes_own = np.array([[40, 40], [60, 60], [60, 40], [40, 60], [0, 50], [15, 85], [50, 100], [85, 85], [100, 50], [85, 15], [50, 0], [15, 15]]) / 100 * n, np.array([[50, 64], [50, 36], [36, 50], [64, 50], [5, 70], [30, 95], [70, 95], [95, 70], [95, 30], [70, 5], [30, 5], [5, 30]]) / 100 * n
-    #in_nodes_own, out_nodes_own = np.array([[20, 50]]) / 100 * n, np.array([[80, 50], [70, 25], [70, 75]]) / 100 * n
-
-    nsq = n ** 2
-    old_iters = 0
-    old_t = 0
-    dirname = str(n) + '/' + f'G{G:.2f}Daeff{Da_eff:.2f}'
+    # VARIOUS
+    n: int = 20
+    "size of network (updated later)"
+    nsq: int = n ** 2
+    "number of nodes (updated later)"
+    ne: int = 0
+    "number of edges (updated later)"
+    b0: float = 1.
+    "initial mean aperture (updated later)"
+    l0: float = 1.
+    "initial mean fracture length (updated later)"
+    old_iters: int = 0
+    "total iterations of simulation"
+    old_t: float = 0.
+    "total time of simulation"
+    dirname: str = f'G{G:.2f}Daeff{Da_eff:.2f}' + '/' + load_name
+    "directory of simulation"

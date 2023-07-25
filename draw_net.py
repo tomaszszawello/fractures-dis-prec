@@ -3,9 +3,9 @@ import networkx as nx
 import numpy as np
 from matplotlib import gridspec
 
-from config import simInputData
+from config import SimInputData
 
-def uniform_hist(sid:simInputData, G, in_nodes, out_nodes, diams, flow, cb, name, data):
+def uniform_hist(sid:SimInputData, G, in_nodes, out_nodes, diams, flow, cb, name, data):
     if data == 'd':
         qs = diams * sid.ddrawconst
     else:
