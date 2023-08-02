@@ -1,7 +1,7 @@
-""" Build network and manage all its properties.
+""" Load network and manage all its properties.
 
-This module contains classes and functions connected with building Delaunay
-network, setting boundary condition on it and evolving.
+This module contains classes and functions connected with loading the discrete
+fracture network.
 
 Notable classes
 -------
@@ -11,7 +11,7 @@ Graph(nx.graph.Graph)
 Notable functions
 -------
 load(SimInputData) -> Graph
-    build Delaunay network with parameters from config
+    load discrete fracture network from JSON file
 """
 
 from __future__ import annotations
@@ -31,31 +31,25 @@ class Graph(nx.graph.Graph):
 
     This class is derived from networkx Graph and contains all information
     abount the network and its properties.
-
-    Attributes
-    -------
-    in_nodes : list
-        list of inlet nodes
-    out_nodes : list
-        list of outlet nodes
     """
     in_nodes = []
+    "list of inlet nodes"
     out_nodes = []
+    "list of outlet nodes"
 
     def __init__(self):
         nx.graph.Graph.__init__(self)
 
     def update_network(self, edges: Edges) -> None:
-        """ Update diameters and flow in the graph.
+        """ Updates apertures and flow in the graph.
 
         Parameters
         -------
+        sid : SimInputData class object
+            all config parameters of the simulation
+
         edges : Edges class object
             all edges in network and their parameters
-            edge_list - array of tuples (n1, n2) with n1, n2 being nodes
-            connected by edge with a given index
-            diams - diameters of edges
-            flow - flow in edges
         """
         nx.set_edge_attributes(self, dict(zip(edges.edge_list, \
             edges.apertures)), 'b')
@@ -63,30 +57,74 @@ class Graph(nx.graph.Graph):
             'q')
 
     def update_initial_network(self, sid: SimInputData, edges: Edges) -> None:
-        """ Update diameters and flow in the graph.
+        """ Updates apertures and permeability in the initial graph.
 
         Parameters
         -------
+        sid : SimInputData
+            all config parameters of the simulation
+        
         edges : Edges class object
             all edges in network and their parameters
-            edge_list - array of tuples (n1, n2) with n1, n2 being nodes
-            connected by edge with a given index
-            diams - diameters of edges
-            flow - flow in edges
         """
         nx.set_edge_attributes(self, dict(zip(edges.edge_list, \
             edges.apertures * sid.b0)), 'b')
         nx.set_edge_attributes(self, dict(zip(edges.edge_list, \
             (edges.apertures * sid.b0) ** 2 / 12)), 'perm')
 
+    def dump_json_graph(self, sid: SimInputData, edges: Edges) -> None:
+        """ Write graph out in json format.
+
+        Parameters
+        -------
+        sid : SimInputData
+            all config parameters of the simulation
+
+        edges : Edges class object
+            all edges in network and their parameters
+        """
+        # updata data in the graph
+        self.update_initial_network(sid, edges)
+        name = f'network_{sid.old_t:04f}'
+        print("--> Dumping Graph into file: " + name + ".json")
+        jsondata = json_graph.node_link_data(self)
+        with open(sid.dirname + '/' + name + '.json', 'w') as fp:
+            json.dump(jsondata, fp)
+        print("--> Complete")
+
 
 def load(sid:SimInputData) -> tuple[Graph, Graph]:
+    """ Loads network from JSON file and translates it to Graph subclass.
+
+    This function loads a discrete fracture network from file set in config and
+    creates two instances of Graph subclass: graph and graph_real. graph_real
+    is exactly like the loaded network - we only evolve its apertures and
+    permeabilities. graph is slightly modified - nodes corresponding to source
+    and target are removed and instead a group of inlet and outlet nodes
+    (which in graph_real are connected to source and target by edges of
+    infinite permeability) is created. graph is afterwards used to initialize
+    all classes necessary for simulation.
+
+    Parameters
+    -------
+    sid : simInputData class object
+        all config parameters of the simulation
+
+    Returns
+    -------
+    graph : Graph class object
+        network and all its properties
+
+    graph_real : Graph class object
+        network with structure exactly as loaded from file, but with evolved
+        apertures and permeabilities
+    """
     # load network from file and change it to Graph subclass
     fp = open(sid.load_name + '.json')
     graph = json_graph.node_link_graph(json.load(fp))
     graph.__class__ = Graph # TO DO: load into subclass more elegantly
-    # copy for saving network exactly same as initial, buut with evolving
-    # apertures
+    # copy for saving network exactly same as initial, but with evolving
+    # apertures and permeabilities
     graph_real = graph.copy()
     # get rid of additional edges with inf permeability from inlet/outlet node
     # (we keep them in graph_real)
@@ -115,6 +153,5 @@ def load(sid:SimInputData) -> tuple[Graph, Graph]:
     lens = nx.get_edge_attributes(graph, 'length').values()
     nx.set_edge_attributes(graph, 0, 'q')
     sid.l0 = sum(lens) / len(lens)
-    sid.nsq = len(graph.nodes())
-    sid.n = int(np.sqrt(sid.nsq))
+    sid.n_nodes = len(graph.nodes())
     return graph, graph_real

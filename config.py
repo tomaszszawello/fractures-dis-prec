@@ -8,8 +8,6 @@ dissolution parameters.
 """
 
 
-# check if pressure & dissolution formulas are correct
-
 class SimInputData:
     """ Configuration class for the whole simulation.
     """
@@ -18,7 +16,7 @@ class SimInputData:
     "maximum number of iterations"
     tmax: float = 500.
     "maximum time"
-    plot_every: int = 50
+    save_every: int = 50
     "frequency (in iterations) of plotting the results"
     collect_every: int = 10
     "frequency (in iterations) of collecting data"
@@ -37,15 +35,17 @@ class SimInputData:
     include_adt: bool = True
     "include adaptive timestep"
     include_breakthrough: bool = False
-    "stop simulation when network is dissolved"
+    ("stop simulation when network is dissolved (i.e. diameter of edge \
+     connected to the outlet grew b_break times)")
 
     # INITIAL CONDITIONS
     q_in: float = 1.
-    "characteristic flow for inlet edge"
-    cb_in: float = 1.
-    "inlet B concentration"
+    "characteristic flow for inlet edge (dimensionless)"
+    concentration_in: float = 1.
+    "inlet solvent concentration (dimensionless)"
     b_break: float = 4.
-    "minimal aperture of outlet fracture for network to be dissolved"
+    ("minimal ratio of aperture of outlet fracture to its initial aperture for \
+     network to be dissolved")
 
     # TIME
     dt: float = 0.01
@@ -56,25 +56,10 @@ class SimInputData:
     dt_max: float = 5.
     "maximum timestep (for adaptive)"
 
-    # PARTICLE TRACKING
-    track_every = 50
-    n_part = 10000
-    normalize_channeling = True
-
-    # DRAWING - not sure if necessary
-    figsize: float = 10.
-    "figure size"
-    qdrawconst: float = 15.
-    "constant for improving flow drawing"
-    ddrawconst: float = 0.5
-    "constant for improving diameter drawing"
-
     # VARIOUS
-    n: int = 20
-    "size of network (updated later)"
-    nsq: int = n ** 2
+    n_nodes: int = 0
     "number of nodes (updated later)"
-    ne: int = 0
+    n_edges: int = 0
     "number of edges (updated later)"
     b0: float = 1.
     "initial mean aperture (updated later)"
@@ -84,5 +69,5 @@ class SimInputData:
     "total iterations of simulation"
     old_t: float = 0.
     "total time of simulation"
-    dirname: str = f'G{G:.2f}Daeff{Da_eff:.2f}' + '/' + load_name
+    dirname: str = f'{load_name}/G{G:.2f}Daeff{Da_eff:.2f}'
     "directory of simulation"

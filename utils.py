@@ -7,9 +7,10 @@ loop and creating simulation directory.
 Notable functions
 -------
 solve_equation(spr.csr_matrix, spr.csc_matrix) -> spr.csc_matrix
-    Solve for x matrix equation A * x = b.
+    Solves for x matrix equation A * x = b.
 """
 
+import numpy as np
 import os
 import scipy.sparse as spr
 import scipy.sparse.linalg as sprlin
@@ -17,8 +18,8 @@ import scipy.sparse.linalg as sprlin
 from config import SimInputData
 
 
-def solve_equation(A: spr.csr_matrix, b: spr.csc_matrix) -> spr.csc_matrix:
-    """ Solve matrix equation A * x = b.
+def solve_equation(A: spr.csr_matrix, b: spr.csc_matrix) -> np.ndarray:
+    """ Solves matrix equation A * x = b.
 
     Parameters
     -------
@@ -30,7 +31,7 @@ def solve_equation(A: spr.csr_matrix, b: spr.csc_matrix) -> spr.csc_matrix:
 
     Returns
     -------
-    scipy sparse vector
+    numpy ndarray
         result x from equation
     """
     return sprlin.spsolve(A, b)
@@ -43,10 +44,6 @@ def initialize_iterators(sid: SimInputData) -> tuple[int, float, int, float, \
     -------
     sid : SimInputData class object
         all config parameters of the simulation
-        iters - max no. of iterations of new simulation
-        tmax - max time of new simulation
-        old_iters - no. of previous iterations (if loaded from saved file)
-        old_t - time of previous simulation (if loaded from saved file)
 
     Returns
     -------
@@ -81,8 +78,6 @@ def update_iterators(sid: SimInputData, i: int, t: float, dt_next: float) -> \
     -------
     sid : simInputData class object
         all config parameters of the simulation
-        old_iters - no. of previous iterations (if loaded from saved file)
-        old_t - time of previous simulation (if loaded from saved file)
 
     i : int
         current iteration
@@ -109,16 +104,15 @@ def update_iterators(sid: SimInputData, i: int, t: float, dt_next: float) -> \
     return i, t
 
 def make_dir(sid: SimInputData) -> None:
-    """ Create directory for the simulation.
+    """ Creates directory for the simulation.
 
-    Create directory named with lowest unoccupied index in directory
-    corresponding to simulation data (geometry + size / Da_eff + G).
+    Creates directory named with lowest unoccupied index in directory
+    corresponding to simulation data (network name / Da_eff + G / index).
 
     Parameters
     -------
     sid : simInputData class object
         all config parameters of the simulation
-        dirname - directory of the simulation
     """
     i = 0
     dirname2 = sid.dirname
@@ -128,3 +122,21 @@ def make_dir(sid: SimInputData) -> None:
         else:
             i += 1
     os.makedirs(sid.dirname)
+
+def save_config(sid:SimInputData) -> None:
+    """ Saves config file od the simulation.
+
+    Parameters
+    -------
+    sid : SimInputData
+        all config parameters of the simulation
+    """
+    f = open(sid.dirname + '/config.txt', 'w')
+    for key, val in sid.__class__.__dict__.items():
+        # workaround to get all class attributes and at the same time get the
+        # values of those updated during simulation
+        if key not in sid.__dict__.keys():
+            f.write(f'{key} = {val} \r')
+        else:
+            f.write(f'{key} = {sid.__dict__[key]} \r')
+    f.close()

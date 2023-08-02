@@ -7,23 +7,21 @@ config file.
 Notable functions
 -------
 build(SimInputData) -> tuple[Graph, Graph, In.Incidence, In.Edges, Data]
-    create class objects and initialize their parameters
+    creates class objects and initialize their parameters
 """
-
-import save as Sv
 
 from config import SimInputData
 from data import Data
 import incidence as In
 from network import Graph, load
-from utils import make_dir
+from utils import make_dir, save_config
 
 
-def build(sid:SimInputData) -> tuple[Graph, Graph, In.Incidence, In.Edges, \
+def build(sid: SimInputData) -> tuple[Graph, Graph, In.Incidence, In.Edges, \
     Data]:
-    """ Initialize main classes used in simulation based on config file.
+    """ Initializes main classes used in simulation based on config file.
 
-    Create class objects and initialize their parameters. Make a simulation
+    Creates class objects and initialize their parameters. Make a simulation
     directory and save there a config file.
 
     Parameters
@@ -38,7 +36,7 @@ def build(sid:SimInputData) -> tuple[Graph, Graph, In.Incidence, In.Edges, \
 
     graph_real : Graph class object
         network with structure exactly as loaded from file, but with evolved
-        apertures
+        apertures and permeabilities
     
     inc : Incidence class object
         matrices of incidence
@@ -59,5 +57,5 @@ def build(sid:SimInputData) -> tuple[Graph, Graph, In.Incidence, In.Edges, \
     # initialize class for collecting data
     data = Data(sid, graph)
     # save file with initial parameters in simulation directory
-    Sv.save_config(sid)
+    save_config(sid)
     return graph, graph_real, inc, edges, data

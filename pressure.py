@@ -10,7 +10,7 @@ equations for flow.
 Notable functions
 -------
 solve_flow(SimInputData, Incidence, Graph, Edges, spr.csc_matrix) \
-    -> np.ndarray
+    -> numpy ndarray
     calculate pressure and update flow in network edges
 """
 
@@ -23,9 +23,10 @@ from network import Graph
 from utils import solve_equation
 
 
-def create_vector(sid:SimInputData, graph: Graph):
+def create_result_vector(sid:SimInputData, graph: Graph) -> spr.csc_matrix:
     """ Creates vector result for pressure calculation.
     
+    This function builds a result vector for solving equation for pressure.
     For inlet and outlet nodes elements of the vector correspond explicitly
     to the pressure in nodes, for regular nodes elements of the vector equal
     0 correspond to flow continuity.
@@ -33,11 +34,10 @@ def create_vector(sid:SimInputData, graph: Graph):
     Parameters
     -------
     sid : SimInputData class object
-        all config parameters of the simulation, here we use attributes:
-        nsq - number of nodes in the network squared
+        all config parameters of the simulation
 
-    in_nodes : list
-        list of inlet nodes
+    graph : Graph class object
+        network and all its properties
     
     Returns
     -------
@@ -49,9 +49,24 @@ def create_vector(sid:SimInputData, graph: Graph):
         data.append(1)
         row.append(node)
         col.append(0)
-    return spr.csc_matrix((data, (row, col)), shape=(sid.nsq, 1))
+    return spr.csc_matrix((data, (row, col)), shape=(sid.n_nodes, 1))
 
-def solve_flow(sid: SimInputData, inc: Incidence, graph: Graph, edges: Edges, \
+def create_vector(sid:SimInputData) -> np.ndarray:
+    """ Creates variable vector for pressure calculation.
+
+    Parameters
+    -------
+    sid : SimInputData class object
+        all config parameters of the simulation
+
+    Returns
+    -------
+    numpy ndarray
+        vector of pressure in nodes
+    """
+    return np.zeros(sid.n_nodes, dtype = float)
+
+def solve_flow(sid: SimInputData, inc: Incidence, edges: Edges, \
     pressure_b: spr.csc_matrix) -> np.ndarray:
     """ Calculates pressure and flow.
 
@@ -59,23 +74,12 @@ def solve_flow(sid: SimInputData, inc: Incidence, graph: Graph, edges: Edges, \
     -------
     sid : SimInputData class object
         all config parameters of the simulation
-        qin - characteristic flow for inlet edge
 
     inc : Incidence class object
-        matrices of incidence; here all of shape (ne x nsq)
-        incidence - incidence of all nodes and edges
-        middle - incidence of nodes and edges for all but inlet and outlet
-        boundary - incidence of nodes and edges for inlet and outlet
-        inlet - incidence of nodes and edges for inlet
-
-    graph : Graph class object
-        network and all its properties
-        in_nodes - inlet nodes
+        matrices of incidence
 
     edges : Edges class object
         all edges in network and their parameters
-        diams - diameters
-        lens - lengths
 
     pressure_b : scipy sparse vector
         result vector for pressure equation
@@ -100,6 +104,6 @@ def solve_flow(sid: SimInputData, inc: Incidence, graph: Graph, edges: Edges, \
     q_in = np.abs(np.sum(edges.fracture_lens * edges.apertures ** 3 \
         / edges.lens * (inc.inlet @ pressure)))
     pressure *= sid.q_in * np.sum(edges.inlet) / q_in
-    # update flow
+    # update flow in edges
     edges.flow = edges.apertures ** 3 / edges.lens * (inc.incidence @ pressure)
     return pressure
